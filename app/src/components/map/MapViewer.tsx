@@ -11,7 +11,7 @@ import {
   getWmsSourceId,
   getWmsLayerId,
   hasApiKey,
-} from '@/lib/wms';
+} from '../../lib/wms';
 
 interface MapViewerProps {
   initialView?: MapViewState;
