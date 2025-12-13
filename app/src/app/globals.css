@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Tailwind CSS 4: 클래스 기반 다크모드 활성화 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Plus Jakarta Sans', var(--font-noto-sans-kr), sans-serif;
+
+  /* Brand Colors */
+  --color-primary: #0ea5e9;       /* Sky blue - 기후/물 */
+  --color-primary-dark: #0284c7;
+  --color-accent: #f97316;        /* Orange - 폭염/열기 */
+  --color-accent-dark: #ea580c;
+  --color-eco: #10b981;           /* Emerald - 녹지/환경 */
+  --color-eco-dark: #059669;
+
+  /* 위험도 색상 팔레트 */
+  --risk-low: #10b981;      /* 녹색 - 안전 */
+  --risk-medium: #f59e0b;   /* 주황색 */
+  --risk-high: #ef4444;     /* 빨간색 */
+  --risk-critical: #991b1b; /* 진한 빨간색 */
+
+  /* Animation timing */
+  --duration-fast: 150ms;
+  --duration-medium: 300ms;
+  --duration-slow: 500ms;
+  --easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 클래스 기반 다크 모드 */
+:root.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+
+  /* 다크모드 브랜드 색상 */
+  --color-primary: #38bdf8;
+  --color-primary-dark: #0ea5e9;
+  --color-accent: #fb923c;
+  --color-accent-dark: #f97316;
+  --color-eco: #34d399;
+  --color-eco-dark: #10b981;
+
+  /* 다크모드 위험도 색상 */
+  --risk-low: #34d399;
+  --risk-medium: #fbbf24;
+  --risk-high: #f87171;
+  --risk-critical: #dc2626;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+
+  /* 위험도 색상 */
+  --color-risk-low: var(--risk-low);
+  --color-risk-medium: var(--risk-medium);
+  --color-risk-high: var(--risk-high);
+  --color-risk-critical: var(--risk-critical);
+}
+
+/* 시스템 설정 폴백 */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+
+    /* 다크모드 위험도 색상 */
+    --risk-low: #34d399;
+    --risk-medium: #fbbf24;
+    --risk-high: #f87171;
+    --risk-critical: #dc2626;
+  }
+}
+
+/* Apply Display Font */
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* MapLibre GL 스타일 오버라이드 */
+.maplibregl-popup-content {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* 위험도 히트맵 그라데이션 */
+.risk-gradient-heat {
+  background: linear-gradient(to right,
+    #3b82f6 0%,    /* low - blue */
+    #22c55e 25%,   /* safe - green */
+    #f59e0b 50%,   /* medium - orange */
+    #ef4444 75%,   /* high - red */
+    #7c2d12 100%   /* critical - dark red */
+  );
+}
+
+.risk-gradient-flood {
+  background: linear-gradient(to right,
+    #3b82f6 0%,    /* low - blue */
+    #06b6d4 25%,   /* safe - cyan */
+    #f59e0b 50%,   /* medium - orange */
+    #3b82f6 75%,   /* high - deep blue */
+    #1e3a8a 100%   /* critical - navy */
+  );
+}
+
+/* 지도 오버레이 스타일 */
+.map-overlay {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .map-overlay {
+    background: rgba(31, 41, 55, 0.95);
+  }
+}
+
+.dark .map-overlay {
+  background: rgba(31, 41, 55, 0.95);
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* 트랜지션 유틸리티 */
+.transition-theme {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.7);
+}
+
+/* 포커스 스타일 개선 (접근성) */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 스킵 네비게이션 (접근성) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
