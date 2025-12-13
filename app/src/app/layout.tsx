@@ -23,6 +23,11 @@ export const metadata: Metadata = {
   authors: [{ name: "CLIMATE SWITCH Team" }],
   creator: "CLIMATE SWITCH",
   publisher: "CLIMATE SWITCH",
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   formatDetection: {
     email: false,
     address: false,
