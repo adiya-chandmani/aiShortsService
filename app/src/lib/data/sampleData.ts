@@ -2,8 +2,8 @@
  * 시뮬레이션 데모를 위한 샘플 데이터 생성
  */
 
-import type { Coordinates } from '@/types/map';
-import type { HeatRiskParams, FloodRiskParams } from '@/types/simulation';
+import type { Coordinates } from '../../types/map';
+import type { HeatRiskParams, FloodRiskParams } from '../../types/simulation';
 
 // 경기도 경계 범위
 const GYEONGGI_BOUNDS = {

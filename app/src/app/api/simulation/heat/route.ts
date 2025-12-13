@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateHeatRiskResult } from '@/lib/simulation/heatRisk';
-import type { HeatRiskParams } from '@/types/simulation';
+import { calculateHeatRiskResult } from '../../../../lib/simulation/heatRisk';
+import type { HeatRiskParams } from '../../../../types/simulation';
 
 /**
  * 폭염 위험도 시뮬레이션 API

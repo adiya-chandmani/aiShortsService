@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { SimulatorClient } from '@/components/simulator';
+import { SimulatorClient } from '../../components/simulator';
 
 function SimulatorLoading() {
   return (

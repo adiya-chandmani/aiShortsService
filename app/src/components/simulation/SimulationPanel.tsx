@@ -1,7 +1,7 @@
 'use client';
 
-import { Slider, Switch, ModeToggle, RiskIndicator } from '@/components/ui';
-import type { SimulationState, SimulationResult } from '@/types/simulation';
+import { Slider, Switch, ModeToggle, RiskIndicator } from '../ui';
+import type { SimulationState, SimulationResult } from '../../types/simulation';
 
 interface SimulationPanelProps {
   state: SimulationState;

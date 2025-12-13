@@ -1,6 +1,6 @@
 'use client';
 
-import type { SimulationMode, SimulationState, ComparisonData } from '@/types/simulation';
+import type { SimulationMode, SimulationState, ComparisonData } from '../../types/simulation';
 
 interface ReportSummaryProps {
   mode: SimulationMode;

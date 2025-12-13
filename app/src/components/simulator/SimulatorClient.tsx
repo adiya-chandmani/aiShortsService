@@ -2,16 +2,16 @@
 
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapViewer, RiskLegend } from '@/components/map';
+import { MapViewer, RiskLegend } from '../map';
 import {
   SimulationPanel,
   ComparisonPanel,
   StatsSummary,
   TopRiskZones,
   type RiskZoneData,
-} from '@/components/simulation';
-import { MapProvider, useMapContext } from '@/contexts/MapContext';
-import { SimulationProvider, useSimulationContext } from '@/contexts/SimulationContext';
+} from '../simulation';
+import { MapProvider, useMapContext } from '../../contexts/MapContext';
+import { SimulationProvider, useSimulationContext } from '../../contexts/SimulationContext';
 import { CitySelector } from './CitySelector';
 import { LocationInfo } from './LocationInfo';
 import {
@@ -19,12 +19,12 @@ import {
   findNearestCell as findNearestSampleCell,
   createRiskGeoJSON,
   type GridCell,
-} from '@/lib/data/sampleData';
-import { useClimateData, type ClimateDataCell } from '@/hooks/useClimateData';
-import { updateRiskLayer, removeRiskLayer } from '@/lib/map/layerManager';
-import { calculateHeatRisk, getRiskLevel } from '@/lib/simulation/heatRisk';
-import { calculateFloodRisk, getRiskLevel as getFloodRiskLevel } from '@/lib/simulation/floodRisk';
-import type { Coordinates } from '@/types/map';
+} from '../../lib/data/sampleData';
+import { useClimateData, type ClimateDataCell } from '../../hooks/useClimateData';
+import { updateRiskLayer, removeRiskLayer } from '../../lib/map/layerManager';
+import { calculateHeatRisk, getRiskLevel } from '../../lib/simulation/heatRisk';
+import { calculateFloodRisk, getRiskLevel as getFloodRiskLevel } from '../../lib/simulation/floodRisk';
+import type { Coordinates } from '../../types/map';
 import type { Map } from 'maplibre-gl';
 
 function SimulatorContent() {

@@ -2,7 +2,7 @@
  * 프로젝트 전역 상수
  */
 
-import type { Coordinates } from '@/types/map';
+import type { Coordinates } from '../../types/map';
 
 // 지도 설정
 export const MAP_CONFIG = {

@@ -4,7 +4,7 @@
  * 계산식: HeatRisk = 0.55*HeatIndex + 0.25*Impervious - 0.20*Green
  */
 
-import type { HeatRiskParams, SimulationResult } from '@/types/simulation';
+import type { HeatRiskParams, SimulationResult } from '../../types/simulation';
 
 /**
  * 폭염 위험도 계산

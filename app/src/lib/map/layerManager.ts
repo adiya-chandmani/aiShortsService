@@ -3,7 +3,7 @@
  */
 
 import type { Map } from 'maplibre-gl';
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../../types/simulation';
 
 const RISK_SOURCE_ID = 'risk-source';
 const RISK_FILL_LAYER_ID = 'risk-fill-layer';

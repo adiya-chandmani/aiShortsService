@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateFloodRiskResult } from '@/lib/simulation/floodRisk';
-import type { FloodRiskParams } from '@/types/simulation';
+import { calculateFloodRiskResult } from '../../../../lib/simulation/floodRisk';
+import type { FloodRiskParams } from '../../../../types/simulation';
 
 /**
  * 침수 위험도 시뮬레이션 API

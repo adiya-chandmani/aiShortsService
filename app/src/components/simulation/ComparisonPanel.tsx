@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComparisonData, SimulationMode } from '@/types/simulation';
+import type { ComparisonData, SimulationMode } from '../../types/simulation';
 
 interface ComparisonPanelProps {
   comparison: ComparisonData | null;

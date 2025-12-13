@@ -1,6 +1,6 @@
 'use client';
 
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../../types/simulation';
 
 interface StatsData {
   totalCells: number;

@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../../types/simulation';
 
 interface RiskComparisonChartProps {
   beforeRisk: number;

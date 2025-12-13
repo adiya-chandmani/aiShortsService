@@ -1,6 +1,6 @@
 'use client';
 
-import type { Coordinates } from '@/types/map';
+import type { Coordinates } from '../../types/map';
 
 interface CellInfo {
   heatIndex: number;

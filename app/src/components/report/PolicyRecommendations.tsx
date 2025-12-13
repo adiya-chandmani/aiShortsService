@@ -1,6 +1,6 @@
 'use client';
 
-import type { SimulationMode, ComparisonData } from '@/types/simulation';
+import type { SimulationMode, ComparisonData } from '../../types/simulation';
 
 interface PolicyRecommendationsProps {
   mode: SimulationMode;

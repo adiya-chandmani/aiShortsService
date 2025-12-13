@@ -17,9 +17,9 @@ import {
   getApiStatus,
   type ClimateFeature,
   type ClimateFeatureCollection,
-} from '@/lib/api/climateApi';
-import type { Coordinates } from '@/types/map';
-import type { SimulationMode, HeatRiskParams, FloodRiskParams } from '@/types/simulation';
+} from '../lib/api/climateApi';
+import type { Coordinates } from '../types/map';
+import type { SimulationMode, HeatRiskParams, FloodRiskParams } from '../types/simulation';
 
 export interface ClimateDataCell {
   id: string;

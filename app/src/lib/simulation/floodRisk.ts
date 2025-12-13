@@ -4,7 +4,7 @@
  * 계산식: FloodRisk = 0.40*RainRisk + 0.25*FloodTrace + 0.20*Impervious + 0.15*RiverProximity
  */
 
-import type { FloodRiskParams, SimulationResult } from '@/types/simulation';
+import type { FloodRiskParams, SimulationResult } from '../../types/simulation';
 
 /**
  * 침수 위험도 계산

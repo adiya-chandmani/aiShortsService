@@ -1,7 +1,7 @@
 'use client';
 
-import type { Coordinates } from '@/types/map';
-import type { SimulationMode } from '@/types/simulation';
+import type { Coordinates } from '../../types/map';
+import type { SimulationMode } from '../../types/simulation';
 
 export interface RiskZoneData {
   id: string;

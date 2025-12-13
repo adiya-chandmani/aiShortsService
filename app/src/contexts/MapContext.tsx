@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { Map } from 'maplibre-gl';
-import type { Coordinates, MapViewState } from '@/types/map';
+import type { Coordinates, MapViewState } from '../types/map';
 
 interface MapContextValue {
   map: Map | null;

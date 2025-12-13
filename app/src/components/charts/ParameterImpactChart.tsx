@@ -10,7 +10,7 @@ import {
   Legend,
   Tooltip,
 } from 'recharts';
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../../types/simulation';
 
 interface ParameterImpactChartProps {
   mode: SimulationMode;

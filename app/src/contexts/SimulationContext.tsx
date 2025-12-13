@@ -14,7 +14,7 @@ import type {
   ComparisonData,
   HeatRiskParams,
   FloodRiskParams,
-} from '@/types/simulation';
+} from '../types/simulation';
 
 interface SimulationContextValue {
   state: SimulationState;

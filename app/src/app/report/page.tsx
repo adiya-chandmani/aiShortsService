@@ -3,8 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useCallback, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { ReportSummary, PolicyRecommendations } from '@/components/report';
-import type { SimulationMode, SimulationState, ComparisonData } from '@/types/simulation';
+import { ReportSummary, PolicyRecommendations } from '../../components/report';
+import type { SimulationMode, SimulationState, ComparisonData } from '../../types/simulation';
 import Link from 'next/link';
 
 // 차트 컴포넌트 동적 로딩 (recharts가 무거우므로)

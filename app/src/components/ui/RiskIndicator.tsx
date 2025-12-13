@@ -1,6 +1,6 @@
 'use client';
 
-import type { SimulationResult } from '@/types/simulation';
+import type { SimulationResult } from '../../types/simulation';
 
 interface RiskIndicatorProps {
   result: SimulationResult | null;

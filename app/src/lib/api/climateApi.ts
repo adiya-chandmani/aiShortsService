@@ -4,7 +4,7 @@
  * WFS (Web Feature Service)를 통해 실제 기후 데이터를 가져옵니다.
  */
 
-import type { Coordinates } from '@/types/map';
+import type { Coordinates } from '../../types/map';
 
 // API 설정
 const API_KEY = process.env.NEXT_PUBLIC_CLIMATE_API_KEY || '';

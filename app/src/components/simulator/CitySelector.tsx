@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { GYEONGGI_CITIES } from '@/lib/config/constants';
-import type { Coordinates } from '@/types/map';
+import { GYEONGGI_CITIES } from '../../lib/config/constants';
+import type { Coordinates } from '../../types/map';
 
 interface CitySelectorProps {
   onSelect: (coordinates: Coordinates) => void;

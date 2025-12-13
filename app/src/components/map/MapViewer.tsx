@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl, { Map, NavigationControl, Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { Coordinates, MapViewState } from '@/types/map';
-import type { SimulationMode } from '@/types/simulation';
+import type { Coordinates, MapViewState } from '../../types/map';
+import type { SimulationMode } from '../../types/simulation';
 import {
   buildWmsTileUrl,
   getLayerForMode,

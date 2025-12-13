@@ -9,7 +9,7 @@
  * - 레이어 형식: spggcee:{레이어명}
  */
 
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../types/simulation';
 
 // 환경 변수에서 API 키 가져오기
 const CLIMATE_API_KEY = process.env.NEXT_PUBLIC_CLIMATE_API_KEY || process.env.CLIMATE_API_KEY;

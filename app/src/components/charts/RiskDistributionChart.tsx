@@ -8,7 +8,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import type { SimulationMode } from '@/types/simulation';
+import type { SimulationMode } from '../../types/simulation';
 
 interface RiskDistributionData {
   lowRiskCount: number;
