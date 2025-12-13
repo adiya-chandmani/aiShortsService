@@ -26,11 +26,6 @@ function getInitialResolvedTheme(): 'light' | 'dark' {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // #region agent log
-  try {
-    fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ThemeContext.tsx:28',message:'ThemeProvider rendering',data:{hasChildren:!!children,typeofWindow:typeof window},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
-  } catch(e) {}
-  // #endregion
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(getInitialResolvedTheme);
 

@@ -507,17 +507,6 @@ function FooterSection() {
 // MAIN PAGE COMPONENT
 // ============================================
 export default function HomePage() {
-  // #region agent log
-  try {
-    if (typeof window !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'HomePage.tsx:509',message:'HomePage component rendering (client)',data:{pathname:window.location.pathname,hash:window.location.hash,readyState:document.readyState},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'A'})}).catch(()=>{});
-    } else {
-      fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'HomePage.tsx:509',message:'HomePage component rendering (server)',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'A'})}).catch(()=>{});
-    }
-  } catch(e) {
-    fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'HomePage.tsx:509',message:'HomePage component error',data:{error:String(e)},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'A'})}).catch(()=>{});
-  }
-  // #endregion
   return (
     <div className="transition-theme">
       <HeroSection />
