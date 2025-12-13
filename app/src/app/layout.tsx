@@ -1,6 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+// #region agent log
+try {
+  fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:3',message:'Importing ThemeProvider',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+} catch(e) {}
+// #endregion
 import { ThemeProvider } from "../contexts/ThemeContext";
+// #region agent log
+try {
+  fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:4',message:'Importing Header',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+} catch(e) {}
+// #endregion
 import { Header } from "../components/layout";
 import "./globals.css";
 
@@ -81,6 +91,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // #region agent log
+  try {
+    if (typeof window === 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:79',message:'RootLayout rendering (server)',data:{hasChildren:!!children,hasThemeProvider:typeof ThemeProvider !== 'undefined',hasHeader:typeof Header !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    } else {
+      fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:79',message:'RootLayout rendering (client)',data:{hasChildren:!!children,pathname:window.location.pathname,hasThemeProvider:typeof ThemeProvider !== 'undefined',hasHeader:typeof Header !== 'undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    }
+  } catch(e) {
+    fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:79',message:'RootLayout error',data:{error:String(e)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  }
+  // #endregion
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${notoSansKR.variable} antialiased`}>

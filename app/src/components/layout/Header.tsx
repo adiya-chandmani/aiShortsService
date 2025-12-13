@@ -12,6 +12,11 @@ const NAV_ITEMS = [
 ];
 
 export function Header() {
+  // #region agent log
+  try {
+    fetch('http://127.0.0.1:7242/ingest/3488d827-43aa-4265-9c85-a4d1c8210adf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Header.tsx:14',message:'Header component rendering',data:{typeofWindow:typeof window},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+  } catch(e) {}
+  // #endregion
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
