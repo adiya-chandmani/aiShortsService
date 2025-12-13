@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "climate-switch",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@turf/turf": "^6.5.0",
+    "html-to-image": "^1.11.13",
+    "maplibre-gl": "^3.6.2",
     "next": "16.0.10",
     "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "react-dom": "19.2.1",
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
