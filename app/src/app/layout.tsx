@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { ThemeProvider } from "../contexts/ThemeContext";
-import { Header } from "../components/layout";
+import { FanCutStudioProvider } from "../contexts/FanCutStudioContext";
+import { AppShell } from "../components/layout/AppShell";
 import "./globals.css";
 
 const notoSansKR = Noto_Sans_KR({
@@ -15,14 +16,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://climate-switch.verc
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "CLIMATE SWITCH - 경기도 기후 시뮬레이터",
-    template: "%s | CLIMATE SWITCH",
+    default: "FanCut AI - IP 기반 숏폼 제작 스튜디오",
+    template: "%s | FanCut AI",
   },
-  description: "경기 기후위성 데이터와 공간정보를 활용하여 도시 요소를 ON/OFF 했을 때 폭염·침수 위험이 어떻게 변하는지 즉시 시각화하고 정량화하는 체험형 지도 서비스",
-  keywords: ["기후", "시뮬레이터", "폭염", "침수", "경기도", "지도", "기후변화", "도시계획", "환경"],
-  authors: [{ name: "CLIMATE SWITCH Team" }],
-  creator: "CLIMATE SWITCH",
-  publisher: "CLIMATE SWITCH",
+  description: "아이디어 한 줄로 플롯부터 이미지·영상까지 이어서 15~30초 숏폼을 완성하는 AI 창작 도구(데모)",
+  keywords: ["AI", "숏폼", "팬콘텐츠", "2차창작", "스토리보드", "플롯", "이미지 생성", "영상 생성", "FanCut", "FanCut AI"],
+  authors: [{ name: "FanCut AI Team" }],
+  creator: "FanCut AI",
+  publisher: "FanCut AI",
   formatDetection: {
     email: false,
     address: false,
@@ -32,22 +33,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     url: siteUrl,
-    siteName: "CLIMATE SWITCH",
-    title: "CLIMATE SWITCH - 경기도 기후 시뮬레이터",
-    description: "도시 요소를 ON/OFF하며 폭염·침수 위험 변화를 시각화하는 체험형 기후 시뮬레이터",
+    siteName: "FanCut AI",
+    title: "FanCut AI - IP 기반 숏폼 제작 스튜디오",
+    description: "아이디어 한 줄로 플롯 → 이미지 → 영상 → 렌더까지 이어지는 숏폼 제작 플로우",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "CLIMATE SWITCH - 경기도 기후 시뮬레이터",
+        alt: "FanCut AI - 숏폼 제작 스튜디오",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CLIMATE SWITCH - 경기도 기후 시뮬레이터",
-    description: "도시 요소를 ON/OFF하며 폭염·침수 위험 변화를 시각화하는 체험형 기후 시뮬레이터",
+    title: "FanCut AI - IP 기반 숏폼 제작 스튜디오",
+    description: "아이디어 한 줄로 플롯 → 이미지 → 영상 → 렌더까지",
     images: ["/og-image.png"],
   },
   robots: {
@@ -85,15 +86,9 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`${notoSansKR.variable} antialiased`}>
         <ThemeProvider>
-          {/* 스킵 네비게이션 - 접근성 */}
-          <a
-            href="#main-content"
-            className="skip-link"
-          >
-            본문으로 바로가기
-          </a>
-          <Header />
-          <main id="main-content">{children}</main>
+          <FanCutStudioProvider>
+            <AppShell>{children}</AppShell>
+          </FanCutStudioProvider>
         </ThemeProvider>
       </body>
     </html>

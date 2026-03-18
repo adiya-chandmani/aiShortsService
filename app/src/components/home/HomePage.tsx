@@ -40,26 +40,26 @@ function HeroSection() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-500" />
               </span>
-              경기도 31개 시군 실시간 데이터 연동
+              아이디어 한 줄 → 15~30초 숏폼 완성
             </div>
 
             {/* Title - Element 3 */}
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl">
               <span className="animate-fade-in inline-block" style={{ animationDelay: '100ms' }}>
-                도시를
+                팬이
               </span>{' '}
               <span className="animate-fade-in inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500" style={{ animationDelay: '200ms' }}>
-                ON/OFF
+                아이디어만
               </span>
               <span className="animate-fade-in inline-block" style={{ animationDelay: '300ms' }}>
-                하면
+                넣으면
               </span>
               <br />
               <span className="animate-fade-in inline-block" style={{ animationDelay: '400ms' }}>
-                기후 위험이
+                AI가
               </span>{' '}
               <span className="animate-fade-in inline-block text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-cyan-500" style={{ animationDelay: '500ms' }}>
-                어떻게 변할까?
+                숏폼을 완성해줘요
               </span>
             </h1>
 
@@ -68,9 +68,9 @@ function HeroSection() {
               className="animate-fade-in max-w-xl text-lg text-slate-600 dark:text-slate-300 sm:text-xl"
               style={{ animationDelay: '600ms' }}
             >
-              녹지를 줄이면? 불투수면을 늘리면? 경기도 기후위성 데이터로{' '}
-              <span className="font-semibold text-slate-900 dark:text-white">폭염·침수 위험 변화</span>를
-              즉시 시각화하고 정량화하세요.
+              복잡한 프롬프트 없이도{' '}
+              <span className="font-semibold text-slate-900 dark:text-white">플롯 → 이미지 → 영상</span>까지
+              한 번에 이어집니다. 컷 단위 수정/재생성으로 일관된 캐릭터·스타일을 유지하세요.
             </p>
 
             {/* CTA Buttons - Element 4 */}
@@ -79,10 +79,10 @@ function HeroSection() {
               style={{ animationDelay: '700ms' }}
             >
               <Link
-                href="/simulator"
+                href="/studio/new"
                 className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-sky-500/30 transition-all hover:shadow-xl hover:shadow-sky-500/40 hover:scale-105"
               >
-                <span className="relative z-10">시뮬레이션 시작하기</span>
+                <span className="relative z-10">스튜디오 시작하기</span>
                 <svg className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -116,25 +116,25 @@ function HeroSection() {
                     <div className="h-3 w-3 rounded-full bg-amber-400" />
                     <div className="h-3 w-3 rounded-full bg-emerald-400" />
                   </div>
-                  <div className="flex-1 text-center text-xs text-slate-400">climate-switch.vercel.app</div>
+                  <div className="flex-1 text-center text-xs text-slate-400">fancut-ai.app</div>
                 </div>
                 <div className="relative aspect-[4/3] bg-gradient-to-br from-sky-100 via-emerald-50 to-orange-50 dark:from-sky-900/30 dark:via-emerald-900/20 dark:to-orange-900/20">
-                  {/* Map mockup */}
+                  {/* Studio mockup */}
                   <div className="absolute inset-4 rounded-lg bg-slate-200/50 dark:bg-slate-700/50">
-                    <div className="absolute left-1/4 top-1/3 h-16 w-16 rounded-full bg-orange-400/60 blur-sm" />
-                    <div className="absolute right-1/4 top-1/2 h-12 w-12 rounded-full bg-emerald-400/60 blur-sm" />
-                    <div className="absolute bottom-1/4 left-1/3 h-20 w-20 rounded-full bg-red-400/60 blur-sm" />
-                    <div className="absolute right-1/3 bottom-1/3 h-14 w-14 rounded-full bg-sky-400/60 blur-sm" />
+                    <div className="absolute left-1/4 top-1/3 h-20 w-20 rounded-2xl bg-orange-400/60 blur-sm" />
+                    <div className="absolute right-1/4 top-1/2 h-16 w-16 rounded-2xl bg-emerald-400/60 blur-sm" />
+                    <div className="absolute bottom-1/4 left-1/3 h-24 w-24 rounded-2xl bg-red-400/60 blur-sm" />
+                    <div className="absolute right-1/3 bottom-1/3 h-18 w-18 rounded-2xl bg-sky-400/60 blur-sm" />
                   </div>
                   {/* Control panel mockup */}
                   <div className="absolute right-4 top-4 w-40 space-y-2 rounded-lg bg-white/90 p-3 shadow-lg backdrop-blur dark:bg-slate-800/90">
-                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">폭염 시뮬레이션</div>
+                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">플롯 → 이미지 → 영상</div>
                     <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
-                      <div className="h-2 w-3/4 rounded-full bg-gradient-to-r from-orange-400 to-red-500" />
+                      <div className="h-2 w-4/5 rounded-full bg-gradient-to-r from-sky-500 to-emerald-500" />
                     </div>
                     <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>녹지 감소</span>
-                      <span>75%</span>
+                      <span>6컷 생성</span>
+                      <span>완료</span>
                     </div>
                   </div>
                 </div>
@@ -144,22 +144,22 @@ function HeroSection() {
             <div className="absolute -bottom-4 -left-4 rounded-xl bg-white p-4 shadow-xl ring-1 ring-slate-100 dark:bg-slate-800 dark:ring-slate-700">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/50">
-                  🌡️
+                  🧠
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">+23%</div>
-                  <div className="text-xs text-slate-500">폭염 위험도 증가</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">6컷</div>
+                  <div className="text-xs text-slate-500">플롯 자동 생성</div>
                 </div>
               </div>
             </div>
             <div className="absolute -right-4 -top-4 rounded-xl bg-white p-4 shadow-xl ring-1 ring-slate-100 dark:bg-slate-800 dark:ring-slate-700">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-2xl dark:bg-sky-900/50">
-                  🌊
+                  🎞️
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">+15%</div>
-                  <div className="text-xs text-slate-500">침수 위험도 증가</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">18초</div>
+                  <div className="text-xs text-slate-500">숏폼 결과물</div>
                 </div>
               </div>
             </div>
@@ -175,30 +175,30 @@ function HeroSection() {
 // ============================================
 const BENEFITS = [
   {
-    icon: '🗺️',
-    title: '실시간 지도 시각화',
-    description: '경기도 31개 시군의 기후 위험도를 지도 위에 실시간으로 표시합니다.',
+    icon: '🧠',
+    title: 'AI 플롯 기획',
+    description: '아이디어 한 줄로 5~10컷 시나리오를 구조적으로 생성합니다.',
     color: 'from-sky-500 to-cyan-500',
     bgColor: 'bg-sky-50 dark:bg-sky-900/30',
   },
   {
-    icon: '🎛️',
-    title: '인터랙티브 시뮬레이션',
-    description: '녹지, 불투수면, 쉼터 등 도시 요소를 조절하며 위험도 변화를 체험합니다.',
+    icon: '🖼️',
+    title: 'AI 이미지 생성',
+    description: '컷별 이미지 후보를 만들고, 선택/재생성으로 일관성을 맞춥니다.',
     color: 'from-orange-500 to-red-500',
     bgColor: 'bg-orange-50 dark:bg-orange-900/30',
   },
   {
-    icon: '📊',
-    title: 'Before/After 비교',
-    description: '시뮬레이션 전후 위험도 변화를 수치와 그래프로 명확하게 비교합니다.',
+    icon: '🎞️',
+    title: 'AI 영상 생성',
+    description: '선택 이미지를 3~5초 컷 영상으로 만들고 컷 단위로 재생성합니다.',
     color: 'from-emerald-500 to-teal-500',
     bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
   },
   {
-    icon: '📈',
-    title: '정책 리포트 생성',
-    description: '분석 결과를 PDF/이미지로 내보내고 정책 제안까지 자동 생성됩니다.',
+    icon: '✨',
+    title: '자동 병합/내보내기',
+    description: '기본 트랜지션·BGM·자막 템플릿으로 결과물을 빠르게 내보냅니다.',
     color: 'from-purple-500 to-pink-500',
     bgColor: 'bg-purple-50 dark:bg-purple-900/30',
   },
@@ -221,14 +221,14 @@ function BenefitsSection() {
             주요 기능
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
-            기후 변화를{' '}
+            제작 흐름을{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-emerald-500">
-              눈으로 확인
+              한 번에 연결
             </span>
             하세요
           </h2>
           <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-            복잡한 기후 데이터를 누구나 이해할 수 있는 시각적 경험으로 제공합니다.
+            여러 툴을 오가지 않고도, 컷 단위로 수정/재생성하며 완성도를 올릴 수 있어요.
           </p>
         </div>
 
@@ -267,10 +267,10 @@ function BenefitsSection() {
 // STATS SECTION (Additional Social Proof)
 // ============================================
 const STATS = [
-  { value: '31', label: '경기도 시군', suffix: '개' },
-  { value: '100', label: '그리드 셀', suffix: 'K+' },
-  { value: '2', label: '시뮬레이션 모드', suffix: '개' },
-  { value: '< 1', label: '계산 속도', suffix: '초' },
+  { value: '6', label: '기본 컷 수', suffix: '컷' },
+  { value: '3', label: '컷 영상 길이', suffix: '초' },
+  { value: '15~30', label: '최종 결과물', suffix: '초' },
+  { value: '< 30', label: '첫 플롯', suffix: '초' },
 ];
 
 function StatsSection() {
@@ -299,11 +299,11 @@ function StatsSection() {
 const FAQS = [
   {
     question: '어떤 데이터를 사용하나요?',
-    answer: '경기기후플랫폼 API를 통해 폭염 체감온도, 열환경지도, 녹지 현황도, 침수흔적지도, 극한호우 위험도 지수 등 공식 데이터를 활용합니다.',
+    answer: '데모 버전에서는 실제 생성 모델 대신, 플로우와 UX를 검증하기 위한 플레이스홀더 생성 로직을 사용합니다.',
   },
   {
-    question: '시뮬레이션 결과는 얼마나 정확한가요?',
-    answer: '실제 기후 데이터와 검증된 위험도 계산 공식을 사용합니다. 다만 교육 및 정책 참고 목적으로, 실제 정책 수립 시에는 전문가 검토가 필요합니다.',
+    question: '생성 결과는 얼마나 정확한가요?',
+    answer: '본 서비스는 “제작 흐름”을 단순화하는 데 집중합니다. 실제 생성 품질은 연결하는 모델/파이프라인에 따라 달라집니다.',
   },
   {
     question: '무료로 사용할 수 있나요?',
@@ -311,7 +311,7 @@ const FAQS = [
   },
   {
     question: '결과를 저장하거나 공유할 수 있나요?',
-    answer: '시뮬레이션 결과를 PNG 이미지나 JSON 형식으로 내보내기가 가능하며, 정책 제안 리포트도 함께 생성됩니다.',
+    answer: '컷 영상과 최종 결과물을 다운로드할 수 있습니다. (데모에서는 WebM 다운로드 제공)',
   },
   {
     question: '모바일에서도 사용할 수 있나요?',
@@ -392,23 +392,23 @@ function FinalCTASection() {
         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
           지금 바로{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400">
-            기후 시뮬레이션
+            FanCut 스튜디오
           </span>
           을
           <br />
           시작해보세요
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-          회원가입 없이 바로 시작할 수 있습니다. 경기도의 기후 위험을 직접 눈으로 확인하고,
-          더 안전한 도시를 위한 인사이트를 얻으세요.
+          회원가입 없이 바로 시작할 수 있습니다. 아이디어를 넣고, 컷을 고치고,
+          이미지와 영상을 생성해 15~30초 결과물을 내보내세요.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
-            href="/simulator"
+            href="/studio/new"
             className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-10 py-4 text-lg font-semibold text-slate-900 shadow-lg transition-all hover:shadow-xl hover:scale-105"
           >
-            시뮬레이션 시작하기
+            스튜디오 시작하기
             <svg className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
@@ -433,7 +433,7 @@ function FinalCTASection() {
             <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            공식 데이터 활용
+            컷 단위 재생성
           </div>
         </div>
       </div>
@@ -452,13 +452,13 @@ function FooterSection() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 text-white">
-              <span className="text-2xl">🌍</span>
+              <span className="text-2xl">🎬</span>
               <span className="text-xl font-bold">
-                CLIMATE<span className="text-sky-400">SWITCH</span>
+                FanCut<span className="text-sky-400">AI</span>
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm">
-              경기 기후위성 데이터와 공간정보를 활용한 기후 위험도 시뮬레이션 서비스입니다.
+              아이디어 한 줄로 플롯부터 이미지·영상까지 이어서 숏폼을 완성하는 제작 스튜디오(데모)입니다.
             </p>
             <div className="mt-6 flex gap-4">
               {['github', 'twitter'].map((social) => (
@@ -486,9 +486,8 @@ function FooterSection() {
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">서비스</h3>
             <ul className="mt-4 space-y-3 text-sm">
-              <li><Link href="/simulator" className="hover:text-white transition-colors">시뮬레이터</Link></li>
+              <li><Link href="/studio" className="hover:text-white transition-colors">스튜디오</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">소개</Link></li>
-              <li><Link href="/report" className="hover:text-white transition-colors">리포트</Link></li>
             </ul>
           </div>
 
@@ -496,7 +495,7 @@ function FooterSection() {
 
         {/* Bottom bar */}
         <div className="mt-12 border-t border-slate-800 pt-8 text-center text-sm">
-          <p>&copy; 2024 CLIMATE SWITCH. 경기 기후위성 데이터 기반 기후 위험도 시뮬레이션 서비스.</p>
+          <p>&copy; 2024 FanCut AI. IP 기반 2차 창작 숏폼 제작 플로우 데모.</p>
         </div>
       </div>
     </footer>

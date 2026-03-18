@@ -1,158 +1,73 @@
-# CLIMATE SWITCH - 경기도 기후 시뮬레이터
+# FanCut AI
 
-경기 기후위성 데이터와 공간정보를 활용하여, 도시 요소(녹지·불투수면·쉼터 등)를 ON/OFF 했을 때 폭염·침수 위험이 어떻게 변하는지 즉시 시각화하고 정량화하는 체험형 지도 서비스입니다.
+Gemini API와 Together AI를 조합해 아이디어 입력부터 플롯, 컷 이미지, 컷 영상, 최종 mp4 병합까지 이어지는 숏폼 제작 스튜디오입니다.
 
-## 🚀 시작하기
+## 핵심 파이프라인
 
-### 필수 요구사항
+- 플롯 기획: `gemini-2.5-flash` + Google Search 기반 IP 리서치 + structured JSON output
+- 이미지 생성: `Together AI` 이미지 생성 API
+- 영상 생성: `veo-3.1-fast-generate-preview`
+- 최종 병합: 로컬 `ffmpeg`로 mp4 concat
 
-- Node.js 18.17 이상
-- npm 또는 yarn
+## Gemini 기준 설계 포인트
 
-### 설치
+- 자유 입력을 5~10개 컷 storyboard JSON으로 강제 출력합니다.
+- 프로젝트 단위 `style bible`과 `character bible`을 먼저 만들고, 이후 이미지/영상 생성에 재사용합니다.
+- 컷 이미지는 Together AI의 `FLUX` 계열 이미지 모델을 사용합니다.
+- 기본 모델은 `black-forest-labs/FLUX.1-schnell`이며, `TOGETHER_REFERENCE_IMAGE_MODEL`을 추가하면 reference-capable 모델로 올릴 수 있습니다.
+- Veo는 현재 4초/6초 단위 생성에 맞춰 요청하고, 앱에서 3초/5초 요구는 mp4 후처리 trim으로 맞춥니다.
+- Gemini 정책상 직접 생성이 어려운 고유 IP/실존인물은 inspired-by 형태로 완화되도록 설계했습니다.
+
+## 요구 사항
+
+- Node.js 20+
+- npm
+- `ffmpeg`
+- Gemini API 키
+- Together API 키
+
+## 환경 변수
+
+`.env.local`:
+
+```env
+GEMINI_API_KEY=AIza...
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+GEMINI_PLOT_MODEL=gemini-2.5-flash
+GEMINI_IP_RESEARCH_MODEL=gemini-2.5-flash-lite
+GEMINI_PLOT_FORMAT_MODEL=gemini-2.5-flash-lite
+GEMINI_VIDEO_MODEL=veo-3.1-fast-generate-preview
+TOGETHER_API_KEY=together_...
+TOGETHER_BASE_URL=https://api.together.xyz/v1
+TOGETHER_IMAGE_MODEL=black-forest-labs/FLUX.1-schnell
+TOGETHER_REFERENCE_IMAGE_MODEL=black-forest-labs/FLUX.1-kontext-pro
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+## 실행
 
 ```bash
-# 의존성 설치
 npm install
-
-# 개발 서버 실행
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
+브라우저에서 `http://localhost:3000`을 엽니다.
 
-### 환경 변수 설정
+## 구현된 API 라우트
 
-`.env.local` 파일을 생성하고 다음 변수를 설정하세요:
+- `POST /api/fancut/plot`
+- `POST /api/fancut/images`
+- `POST /api/fancut/videos`
+- `GET /api/fancut/videos/:videoId`
+- `GET /api/fancut/videos/:videoId/content`
+- `POST /api/fancut/render`
 
-```env
-CLIMATE_API_KEY=your_api_key_here
-CLIMATE_API_BASE_URL=https://api.example.com
-NEXT_PUBLIC_MAP_STYLE_URL=https://basemaps.cartocdn.com/gl/positron-gl-style/style.json
-```
+## 현재 제약
 
-## 📁 프로젝트 구조
-
-```
-app/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/               # API Routes
-│   │   │   └── simulation/   # 시뮬레이션 API
-│   │   ├── simulator/         # 시뮬레이터 페이지
-│   │   ├── about/            # 서비스 소개 페이지
-│   │   ├── layout.tsx        # 루트 레이아웃
-│   │   └── page.tsx          # 메인 페이지
-│   ├── components/           # 재사용 가능한 컴포넌트
-│   ├── lib/                  # 유틸리티 및 로직
-│   │   └── simulation/      # 시뮬레이션 계산 로직
-│   └── types/               # TypeScript 타입 정의
-├── public/                   # 정적 파일
-└── prd.md                   # 제품 요구사항 문서
-```
-
-## 🛠️ 기술 스택
-
-- **프레임워크**: Next.js 16 (App Router)
-- **언어**: TypeScript
-- **스타일링**: Tailwind CSS 4
-- **지도**: MapLibre GL JS
-- **차트**: Recharts
-- **지리공간 계산**: Turf.js
-- **배포**: Vercel
-
-## 📊 주요 기능
-
-### 폭염 시뮬레이션
-- 녹지 감소가 폭염 위험에 미치는 영향 분석
-- 불투수면 증가 효과 시각화
-- 무더위쉼터 효과 계산
-
-### 침수 시뮬레이션
-- 도시 구조 변화가 침수에 미치는 영향 분석
-- 극한호우 위험도 계산
-- 하천 근접도 고려
-
-### Before/After 비교
-- 시뮬레이션 전후 위험도 변화 비교
-- 수치 및 그래프로 시각화
-- 변화율(%) 계산
-
-## 🔧 개발
-
-### 빌드
-
-```bash
-npm run build
-```
-
-### 린트
-
-```bash
-npm run lint
-```
-
-### 타입 체크
-
-```bash
-npx tsc --noEmit
-```
-
-## 📝 API 엔드포인트
-
-### POST /api/simulation/heat
-폭염 위험도 시뮬레이션 계산
-
-**요청 본문**:
-```json
-{
-  "heatIndex": 0.7,
-  "impervious": 0.5,
-  "green": 0.3,
-  "greenReduction": 0.1,
-  "imperviousIncrease": 0.2,
-  "shelterEnabled": true
-}
-```
-
-**응답**:
-```json
-{
-  "risk": 0.65,
-  "riskLevel": "high"
-}
-```
-
-### POST /api/simulation/flood
-침수 위험도 시뮬레이션 계산
-
-**요청 본문**:
-```json
-{
-  "rainRisk": 0.6,
-  "floodTrace": 0.4,
-  "impervious": 0.5,
-  "riverProximity": 0.3,
-  "imperviousIncrease": 0.2,
-  "floodDefenseEnabled": false
-}
-```
-
-**응답**:
-```json
-{
-  "risk": 0.55,
-  "riskLevel": "high"
-}
-```
-
-## 📚 참고 문서
-
-- [프로젝트 규칙](./shrimp-rules.md) - 개발 가이드라인
-- [PRD](../prd.md) - 제품 요구사항 문서
-- [Next.js 문서](https://nextjs.org/docs)
-- [MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/)
-
-## 📄 라이선스
-
-이 프로젝트는 해커톤 프로젝트입니다.
+- 최종 병합은 `ffmpeg`가 있는 Node 런타임을 전제로 합니다.
+- BGM/자막 합성은 현재 MVP 범위 밖입니다.
+- Veo 응답 시간은 컷 수와 해상도에 따라 길어질 수 있습니다.
+- Together 이미지 모델은 계정 크레딧이 있어야 호출할 수 있고, 이미지 모델 접근은 Build Tier에 따라 제한될 수 있습니다.
+- 기본 모델인 `FLUX.1-schnell`은 실제 크레딧을 사용하는 모델로 보는 편이 안전합니다.
+- 레퍼런스 이미지를 실제로 활용하려면 `TOGETHER_REFERENCE_IMAGE_MODEL`에 `kontext` 계열처럼 image-guided를 지원하는 모델을 넣는 편이 좋습니다.
+- 플롯 전 IP 리서치는 Gemini의 Google Search grounding을 사용하므로, 검색 도구 사용분이 추가 과금될 수 있습니다.

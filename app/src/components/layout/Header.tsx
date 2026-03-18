@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 const NAV_ITEMS = [
   { href: '/', label: '홈' },
-  { href: '/simulator', label: '시뮬레이터' },
+  { href: '/studio', label: '스튜디오' },
   { href: '/about', label: '소개' },
 ];
 
@@ -45,29 +45,42 @@ export function Header() {
     );
   };
 
+  // One coherent header across pages (studio included)
+  const headerClassName =
+    'sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95';
+  const mobileMenuClassName =
+    'border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900 md:hidden';
+  const baseText =
+    'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white';
+  const activeText = 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+  const iconButtonClass =
+    'rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800';
+  const mobileIconButtonClass =
+    'rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 md:hidden';
+
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95">
+    <header className={headerClassName}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl">🌍</span>
+          <span className="text-2xl">🎬</span>
           <span className="text-lg font-bold text-gray-900 dark:text-white">
-            CLIMATE<span className="text-blue-600 dark:text-blue-400">SWITCH</span>
+            FanCut<span className="text-blue-600 dark:text-blue-400">AI</span>
           </span>
         </Link>
 
         {/* 데스크톱 네비게이션 */}
         <nav className="hidden items-center gap-1 md:flex">
           {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white'
+                    ? activeText
+                    : baseText
                 }`}
               >
                 {item.label}
@@ -82,7 +95,7 @@ export function Header() {
           <button
             type="button"
             onClick={cycleTheme}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            className={iconButtonClass}
             aria-label={`현재 테마: ${theme === 'system' ? '시스템' : theme === 'dark' ? '다크' : '라이트'}. 클릭하여 변경`}
             title={theme === 'system' ? '시스템 테마' : theme === 'dark' ? '다크 모드' : '라이트 모드'}
           >
@@ -91,17 +104,17 @@ export function Header() {
 
           {/* 시뮬레이터 바로가기 (데스크톱) */}
           <Link
-            href="/simulator"
+            href="/studio/new"
             className="hidden rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 md:block"
           >
-            시뮬레이션 시작
+            스튜디오 시작
           </Link>
 
           {/* 모바일 메뉴 버튼 */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 md:hidden"
+            className={mobileIconButtonClass}
             aria-label="메뉴 열기"
             aria-expanded={mobileMenuOpen}
           >
@@ -120,10 +133,10 @@ export function Header() {
 
       {/* 모바일 메뉴 */}
       {mobileMenuOpen && (
-        <nav className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900 md:hidden">
+        <nav className={mobileMenuClassName}>
           <div className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.href}
@@ -131,7 +144,7 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                      ? activeText
                       : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                   }`}
                 >
@@ -140,11 +153,11 @@ export function Header() {
               );
             })}
             <Link
-              href="/simulator"
+              href="/studio/new"
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-2 rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white"
+              className="mt-2 rounded-lg bg-blue-600 px-4 py-3 text-center text-sm font-medium text-white hover:bg-blue-700"
             >
-              시뮬레이션 시작
+              스튜디오 시작
             </Link>
           </div>
         </nav>
