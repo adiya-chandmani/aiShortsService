@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { concatMp4Clips, trimAndNormalizeClip, withTempDir } from '@/lib/fancut/ffmpeg';
-import { falBinary, FalRequestError, falVideoResult } from '@/lib/fancut/fal';
+import { togetherJson, TogetherRequestError, type TogetherVideoResponse } from '@/lib/fancut/together';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
 export const runtime = 'nodejs';
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as RenderRequest;
 
     if (!body.clips?.length) {
-      throw new FalRequestError('병합할 컷 영상이 없습니다.', 400);
+      throw new TogetherRequestError('병합할 컷 영상이 없습니다.', 400);
     }
 
     return await withTempDir('fancut-render-', async (dir) => {
@@ -28,13 +28,18 @@ export async function POST(request: Request) {
 
       for (let index = 0; index < body.clips.length; index += 1) {
         const clip = body.clips[index];
-        const result = await falVideoResult(clip.videoId);
-        const videoUri = result.video?.url;
+        const video = await togetherJson<TogetherVideoResponse>(`/videos/${clip.videoId}`, {
+          method: 'GET',
+        });
+        const videoUri = video.outputs?.video_url;
         if (!videoUri) {
-          throw new FalRequestError(`CUT ${index + 1}의 Seedance 영상 URL을 찾지 못했습니다.`, 502);
+          throw new TogetherRequestError(`CUT ${index + 1}의 Together 영상 URL을 찾지 못했습니다.`, 502);
         }
 
-        const upstream = await falBinary(videoUri, { method: 'GET' });
+        const upstream = await fetch(videoUri, { method: 'GET', cache: 'no-store' });
+        if (!upstream.ok) {
+          throw new TogetherRequestError(`CUT ${index + 1}의 Together 영상 다운로드에 실패했습니다. (${upstream.status})`, upstream.status);
+        }
         const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
 
         const rawPath = path.join(dir, `clip-${index}-raw.mp4`);
@@ -67,7 +72,7 @@ export async function POST(request: Request) {
       });
     });
   } catch (error) {
-    const status = error instanceof FalRequestError ? error.status : 500;
+    const status = error instanceof TogetherRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '최종 렌더에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }

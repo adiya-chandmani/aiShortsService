@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { falSubmitVideo, FalRequestError } from '@/lib/fancut/fal';
+import {
+  dataUrlToBase64,
+  togetherJson,
+  togetherVideoDimensions,
+  togetherVideoModel,
+  TogetherRequestError,
+  type TogetherVideoResponse,
+} from '@/lib/fancut/together';
 import { buildVideoPrompt } from '@/lib/fancut/prompts';
 import type { FanCutCut, FanCutProject, MotionType } from '@/types/fancut';
 
@@ -17,34 +24,48 @@ type CreateVideoRequest = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateVideoRequest;
-    const input: Record<string, unknown> = {
-      prompt: buildVideoPrompt({
-        project: body.project,
-        cut: body.cut,
-        motionType: body.motionType,
-        durationSec: body.durationSec,
-      }),
-      image_url: body.imageDataUrl,
-      aspect_ratio: body.project.aspectRatio,
-      duration: String(body.durationSec),
-      resolution: '720p',
-      camera_fixed: body.motionType === 'static',
-    };
+    const model = togetherVideoModel();
+    const dimensions = togetherVideoDimensions(body.project.aspectRatio);
+    const frameImages: Array<Record<string, unknown>> = [
+      {
+        frame: 0,
+        input_image: dataUrlToBase64(body.imageDataUrl),
+      },
+    ];
 
     if (body.endImageDataUrl) {
-      input.end_image_url = body.endImageDataUrl;
+      frameImages.push({
+        frame: body.durationSec,
+        input_image: dataUrlToBase64(body.endImageDataUrl),
+      });
     }
 
-    const queued = await falSubmitVideo(input);
+    const created = await togetherJson<TogetherVideoResponse>('/videos', {
+      method: 'POST',
+      body: JSON.stringify({
+        model,
+        prompt: buildVideoPrompt({
+          project: body.project,
+          cut: body.cut,
+          motionType: body.motionType,
+          durationSec: body.durationSec,
+        }),
+        width: dimensions.width,
+        height: dimensions.height,
+        duration: body.durationSec,
+        steps: 16,
+        frame_images: frameImages,
+      }),
+    });
 
     return NextResponse.json({
-      id: queued.request_id,
-      status: 'queued',
-      progress: 0,
+      id: created.id,
+      status: created.status,
+      progress: created.status === 'completed' ? 100 : 0,
       seconds: body.durationSec,
     });
   } catch (error) {
-    const status = error instanceof FalRequestError ? error.status : 500;
+    const status = error instanceof TogetherRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '영상 생성에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }

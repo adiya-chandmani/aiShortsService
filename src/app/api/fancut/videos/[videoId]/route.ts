@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { falVideoResult, falVideoStatus, FalRequestError } from '@/lib/fancut/fal';
+import { togetherJson, TogetherRequestError, type TogetherVideoResponse } from '@/lib/fancut/together';
 
 export const runtime = 'nodejs';
 
@@ -9,25 +9,20 @@ export async function GET(
 ) {
   try {
     const { videoId } = await context.params;
-    const status = await falVideoStatus(videoId);
-
-    if (status.status === 'COMPLETED') {
-      const result = await falVideoResult(videoId);
-      return NextResponse.json({
-        id: videoId,
-        status: 'completed',
-        progress: 100,
-        downloadUri: result.video?.url,
-      });
-    }
+    const video = await togetherJson<TogetherVideoResponse>(`/videos/${videoId}`, {
+      method: 'GET',
+    });
 
     return NextResponse.json({
       id: videoId,
-      status: status.status === 'IN_QUEUE' ? 'queued' : 'in_progress',
-      progress: status.status === 'IN_PROGRESS' ? 50 : 0,
+      status: video.status,
+      progress: video.status === 'completed' ? 100 : video.status === 'in_progress' ? 50 : 0,
+      seconds: video.seconds,
+      downloadUri: video.outputs?.video_url,
+      error: video.error ?? (video.info?.errors?.[0] ? { message: video.info.errors[0] } : undefined),
     });
   } catch (error) {
-    const status = error instanceof FalRequestError ? error.status : 500;
+    const status = error instanceof TogetherRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '영상 상태 조회에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }

@@ -4,6 +4,7 @@ const TOGETHER_BASE_URL = process.env.TOGETHER_BASE_URL ?? 'https://api.together
 const MAX_RETRIES = 2;
 const DEFAULT_IMAGE_MODEL = 'black-forest-labs/FLUX.1-schnell';
 const DEFAULT_REFERENCE_IMAGE_MODEL = 'black-forest-labs/FLUX.1-kontext-pro';
+const DEFAULT_VIDEO_MODEL = 'ByteDance/Seedance-1.0-lite';
 
 export class TogetherRequestError extends Error {
   status: number;
@@ -125,3 +126,42 @@ export function togetherDefaultSteps(model: string) {
   if (lower.includes('schnell')) return 4;
   return 20;
 }
+
+export function togetherVideoModel() {
+  return process.env.TOGETHER_VIDEO_MODEL?.trim() || DEFAULT_VIDEO_MODEL;
+}
+
+export function togetherVideoDimensions(aspectRatio: AspectRatio) {
+  return aspectRatio === '16:9'
+    ? { width: 960, height: 416, size: '960x416' }
+    : { width: 416, height: 960, size: '416x960' };
+}
+
+export function dataUrlToBase64(dataUrl: string) {
+  const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
+  if (!match) {
+    throw new TogetherRequestError('이미지 형식을 읽을 수 없습니다. base64 data URL이 필요합니다.', 400);
+  }
+
+  return match[2];
+}
+
+export type TogetherVideoResponse = {
+  id: string;
+  model: string;
+  status: 'queued' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
+  created_at?: string | number;
+  size?: string;
+  seconds?: string;
+  error?: {
+    message?: string;
+    code?: string;
+  };
+  info?: {
+    errors?: string[] | null;
+  };
+  outputs?: {
+    cost?: number;
+    video_url?: string;
+  };
+};
