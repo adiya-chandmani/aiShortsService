@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/simulator`,
+      url: `${baseUrl}/studio`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.9,
@@ -23,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/report`,
+      url: `${baseUrl}/studio/new`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.7,
