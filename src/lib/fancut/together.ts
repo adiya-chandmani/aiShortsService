@@ -1,6 +1,11 @@
 import type { AspectRatio } from '@/types/fancut';
 
-const TOGETHER_BASE_URL = process.env.TOGETHER_BASE_URL ?? 'https://api.together.xyz/v1';
+function normalizeTogetherBaseUrl(raw?: string) {
+  const base = (raw ?? 'https://api.together.xyz/v1').trim().replace(/\/+$/, '');
+  return base.endsWith('/v1') ? base : `${base}/v1`;
+}
+
+const TOGETHER_BASE_URL = normalizeTogetherBaseUrl(process.env.TOGETHER_BASE_URL);
 const MAX_RETRIES = 2;
 const DEFAULT_IMAGE_MODEL = 'black-forest-labs/FLUX.1-schnell';
 const DEFAULT_REFERENCE_IMAGE_MODEL = 'black-forest-labs/FLUX.1-kontext-pro';
@@ -36,7 +41,12 @@ function makeHeaders(extra?: HeadersInit) {
 
 async function parseErrorMessage(response: Response) {
   try {
-    const data = (await response.json()) as {
+    const raw = await response.text();
+    if (!raw.trim()) {
+      return `Together AI 호출 실패 (${response.status})`;
+    }
+
+    const data = JSON.parse(raw) as {
       error?: string | { message?: string };
       message?: string;
       detail?: string;

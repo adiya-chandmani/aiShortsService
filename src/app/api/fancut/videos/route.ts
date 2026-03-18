@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     if (body.endImageDataUrl) {
       frameImages.push({
-        frame: body.durationSec,
+        frame: 'last',
         input_image: dataUrlToBase64(body.endImageDataUrl),
       });
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         }),
         width: dimensions.width,
         height: dimensions.height,
-        duration: body.durationSec,
+        seconds: String(body.durationSec),
         steps: 16,
         frame_images: frameImages,
       }),
