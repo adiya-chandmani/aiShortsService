@@ -90,7 +90,7 @@ export default function VideosPage() {
             </div>
             <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              선택된 이미지로 Gemini Veo 컷 영상을 생성하고, 미리보기용 mp4로 정리합니다.
+              선택된 이미지로 Seedance 1.0 Lite 컷 영상을 생성하고, 미리보기용 mp4로 정리합니다.
             </p>
             <div className="mt-4">
               <WorkflowStepper projectId={projectId} />

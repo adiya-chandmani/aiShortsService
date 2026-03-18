@@ -2,22 +2,10 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { trimAndNormalizeClip, withTempDir } from '@/lib/fancut/ffmpeg';
-import { decodeOperationToken, geminiBinaryUrl, GeminiRequestError, geminiJson } from '@/lib/fancut/gemini';
+import { falBinary, FalRequestError, falVideoResult } from '@/lib/fancut/fal';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
 export const runtime = 'nodejs';
-
-type GeminiVideoOperation = {
-  response?: {
-    generateVideoResponse?: {
-      generatedSamples?: Array<{
-        video?: {
-          uri?: string;
-        };
-      }>;
-    };
-  };
-};
 
 export async function GET(
   request: Request,
@@ -25,20 +13,17 @@ export async function GET(
 ) {
   try {
     const { videoId } = await context.params;
-    const operationName = decodeOperationToken(videoId);
     const url = new URL(request.url);
     const durationSec = Number(url.searchParams.get('durationSec') ?? '0');
     const size = url.searchParams.get('size') as VideoSize | null;
 
-    const operation = await geminiJson<GeminiVideoOperation>(`/${operationName}`, {
-      method: 'GET',
-    });
-    const videoUri = operation.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
+    const result = await falVideoResult(videoId);
+    const videoUri = result.video?.url;
     if (!videoUri) {
-      throw new GeminiRequestError('Gemini 영상 다운로드 URI를 찾지 못했습니다.', 502);
+      throw new FalRequestError('Seedance 영상 다운로드 URL을 찾지 못했습니다.', 502);
     }
 
-    const upstream = await geminiBinaryUrl(videoUri, {
+    const upstream = await falBinary(videoUri, {
       method: 'GET',
     });
     const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
@@ -73,7 +58,7 @@ export async function GET(
       });
     });
   } catch (error) {
-    const status = error instanceof GeminiRequestError ? error.status : 500;
+    const status = error instanceof FalRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '영상 다운로드에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }
