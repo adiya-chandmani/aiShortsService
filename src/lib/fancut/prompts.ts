@@ -60,7 +60,8 @@ export function buildPlotSystemPrompt() {
     'For character_bible.appearance, write specific visible traits such as hair color, hairstyle, eye shape, face impression, build, age impression, skin tone, facial marks, and signature accessories.',
     'For character_bible.wardrobe, write specific visible outfit details such as top, bottom, outerwear, uniform number, shoes, gloves, headbands, jewelry, and the main color combination.',
     'Never replace known characters with generic labels such as red-haired player, black-haired player, main character, rival, male student, or female student.',
-    'However, for image_prompt and video_prompt, if direct depiction could be risky, convert the visual description into an inspired-by version that keeps tone, role, and visual cues without requiring exact copyrighted likeness.',
+    'For image_prompt and video_prompt, do not rely on names alone. Spell out the visible traits, costume details, signature accessories, silhouette, and color cues needed to make the character recognizable.',
+    'When a fictional IP is identified, preserve the canonical visible design cues in the prompts instead of downgrading them to vague inspired-by wording.',
     'Do not invent random replacement names when a known fictional IP is clearly identified.',
     'Keep prompts concise but production-usable. Avoid empty phrases, generic filler, and camera jargon overload.',
     'Return Korean output.',
@@ -89,8 +90,9 @@ export function buildPlotUserPrompt(project: Pick<FanCutProject, 'title' | 'idea
     '9. 장면 요약에는 누가, 어디서, 무엇을 하는지가 분명히 드러나야 한다.',
     '10. vague한 표현 대신 시각적으로 그릴 수 있는 명사와 동사를 사용한다.',
     '11. 사용자가 직접 프롬프트를 쓰지 않아도 되도록 각 컷용 image_prompt, video_prompt를 자동 작성한다.',
-    '12. Gemini 정책상 직접 생성이 어려운 고유 IP/실존인물 요소는 inspired-by 형태의 오리지널 표현으로 완화한다.',
-    '13. 마크다운 없이 결과 생성에 필요한 기획 초안만 작성한다.',
+    '12. image_prompt와 video_prompt에는 캐릭터 이름만 쓰지 말고, 외형과 의상 시그니처를 같이 적어서 모델이 generic 얼굴로 대체하지 못하게 한다.',
+    '13. fictional IP가 분명하면 외형 시그니처와 유니폼/의상 시그니처를 최대한 보존해 recognizability를 높인다.',
+    '14. 마크다운 없이 결과 생성에 필요한 기획 초안만 작성한다.',
   ].join('\n');
 }
 
@@ -193,6 +195,29 @@ function relevantCharacterBibleText(project: FanCutProject, cut: FanCutCut) {
     .join('\n');
 }
 
+function strictCharacterAppearanceLock(project: FanCutProject, cut: FanCutCut) {
+  const tokens = characterTokens(cut.characters);
+  const bible = project.consistency?.characterBible ?? [];
+  const relevant = bible.filter((character) => tokens.some((token) => character.name.includes(token) || token.includes(character.name)));
+  const selected = relevant.length > 0 ? relevant : bible.slice(0, 3);
+
+  if (selected.length === 0) return '';
+
+  return [
+    'Mandatory visible character design lock:',
+    ...selected.map((character) =>
+      [
+        `- ${character.name}:`,
+        `  exact visible appearance -> ${character.appearance}`,
+        `  exact wardrobe -> ${character.wardrobe}`,
+        `  must keep -> ${character.mustKeep.join(', ')}`,
+      ].join('\n')
+    ),
+    'Do not replace these named characters with generic anime faces, generic school uniforms, or loosely similar substitutes.',
+    'Hair color, hairstyle, face impression, signature markings, outfit silhouette, and main costume colors are mandatory.',
+  ].join('\n');
+}
+
 export function buildImagePrompt(params: {
   project: FanCutProject;
   cut: FanCutCut;
@@ -284,6 +309,20 @@ function requiredPropsGuidance(cut: FanCutCut) {
   return `Mandatory visible props: ${[...new Set(props)].join(', ')}. These props must be clearly visible in the frame.`;
 }
 
+function strictIdentityNegativeGuidance(project: FanCutProject, cut: FanCutCut) {
+  const relevantGuide = relevantCharacterBibleText(project, cut);
+  if (!relevantGuide) return '';
+
+  return [
+    'Wrong result examples to avoid:',
+    '- generic anime boy or girl with unrelated hairstyle',
+    '- wrong hair color or wrong eye shape',
+    '- wrong uniform colors or missing signature outfit details',
+    '- different face structure from the required character design',
+    '- loosely similar but incorrect substitute character',
+  ].join('\n');
+}
+
 export function buildTogetherImagePrompt(params: {
   project: FanCutProject;
   cut: FanCutCut;
@@ -318,11 +357,13 @@ export function buildTogetherImagePrompt(params: {
     `Visual rules: ${(project.consistency?.visualRules ?? []).join(', ') || 'No additional rules.'}`,
     `Relevant character look guide:\n${relevantCharacterBibleText(project, cut)}`,
     `Character bible:\n${characterBibleText(project)}`,
+    strictCharacterAppearanceLock(project, cut),
     continuityText,
     openingCutGuidance(cut),
     previousCutGuard,
     multipleCharacterGuidance(cut),
     requiredPropsGuidance(cut),
+    strictIdentityNegativeGuidance(project, cut),
     'These images will be used as start frames for AI video generation, so they must look like natural animation frames rather than comics or illustrated posters.',
     'If the required characters or action are missing, the image is incorrect.',
     'When generating multiple candidates, vary only micro-expression, lens emphasis, or minor environmental detail. Do not change identity, wardrobe, or core composition.',

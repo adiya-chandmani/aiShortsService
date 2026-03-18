@@ -219,11 +219,6 @@ export default function ImagesPage() {
                       <div className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">
                         {cut.sceneSummary}
                       </div>
-                      {candidates[0]?.promptSummary && (
-                        <div className="mt-2 line-clamp-2 text-[11px] text-slate-500 dark:text-slate-400">
-                          생성 프롬프트 핵심: {candidates[0].promptSummary}
-                        </div>
-                      )}
                     </div>
                     <button
                       type="button"
@@ -289,7 +284,6 @@ export default function ImagesPage() {
                             active ? 'ring-emerald-400' : 'ring-transparent hover:ring-slate-200 dark:hover:ring-slate-700'
                           }`}
                           aria-label={active ? '선택됨' : '선택'}
-                          title={c.promptSummary}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={c.imageDataUrl} alt="" className="h-40 w-full object-cover" />

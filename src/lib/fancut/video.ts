@@ -8,6 +8,19 @@ async function loadImage(dataUrl: string) {
   return img;
 }
 
+function constrainedSize(width: number, height: number, maxLongEdge: number) {
+  const longEdge = Math.max(width, height);
+  if (longEdge <= maxLongEdge) {
+    return { width, height };
+  }
+
+  const scale = maxLongEdge / longEdge;
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
@@ -142,4 +155,24 @@ export async function createThumbnailDataUrl(imageDataUrl: string) {
 
   ctx.drawImage(img, x, y, drawW, drawH);
   return canvas.toDataURL('image/png');
+}
+
+export async function optimizeVideoReferenceDataUrl(
+  imageDataUrl: string,
+  options?: { maxLongEdge?: number; quality?: number }
+) {
+  const img = await loadImage(imageDataUrl);
+  const maxLongEdge = options?.maxLongEdge ?? 960;
+  const quality = options?.quality ?? 0.78;
+  const size = constrainedSize(img.width, img.height, maxLongEdge);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size.width;
+  canvas.height = size.height;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context unavailable');
+
+  ctx.drawImage(img, 0, 0, size.width, size.height);
+  return canvas.toDataURL('image/jpeg', quality);
 }

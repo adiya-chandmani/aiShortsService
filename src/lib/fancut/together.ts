@@ -3,6 +3,7 @@ import type { AspectRatio } from '@/types/fancut';
 const TOGETHER_BASE_URL = process.env.TOGETHER_BASE_URL ?? 'https://api.together.xyz/v1';
 const MAX_RETRIES = 2;
 const DEFAULT_IMAGE_MODEL = 'black-forest-labs/FLUX.1-schnell';
+const DEFAULT_REFERENCE_IMAGE_MODEL = 'black-forest-labs/FLUX.1-kontext-pro';
 
 export class TogetherRequestError extends Error {
   status: number;
@@ -95,7 +96,7 @@ export function togetherDefaultImageModel() {
 }
 
 export function togetherReferenceImageModel() {
-  return process.env.TOGETHER_REFERENCE_IMAGE_MODEL?.trim() || '';
+  return process.env.TOGETHER_REFERENCE_IMAGE_MODEL?.trim() || DEFAULT_REFERENCE_IMAGE_MODEL;
 }
 
 export function resolveTogetherImageModel(hasReferenceImage: boolean) {

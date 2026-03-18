@@ -15,7 +15,7 @@ import type {
   VideoAsset,
 } from '@/types/fancut';
 import { createId } from '@/lib/fancut/id';
-import { createThumbnailDataUrl } from '@/lib/fancut/video';
+import { createThumbnailDataUrl, optimizeVideoReferenceDataUrl } from '@/lib/fancut/video';
 import { normalizeAspectRatio, normalizeResolutionPreset, videoSizeForProject } from '@/lib/fancut/prompts';
 
 type State = {
@@ -435,6 +435,10 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function requestPayloadBytes(payload: unknown) {
+  return new TextEncoder().encode(JSON.stringify(payload)).length;
+}
+
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
@@ -759,17 +763,36 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       const nextCut = cutIndex >= 0 ? orderedCuts[cutIndex + 1] : undefined;
       const nextSelectedImage = nextCut ? selectedImageForCut(state, nextCut.cutId) : undefined;
 
+      const optimizedStartImage = await optimizeVideoReferenceDataUrl(selectedImage.imageDataUrl, {
+        maxLongEdge: 960,
+        quality: 0.78,
+      });
+      const optimizedEndImage = nextSelectedImage
+        ? await optimizeVideoReferenceDataUrl(nextSelectedImage.imageDataUrl, {
+            maxLongEdge: 960,
+            quality: 0.74,
+          })
+        : undefined;
+
+      const basePayload = {
+        project,
+        cut,
+        motionType,
+        durationSec,
+        imageDataUrl: optimizedStartImage,
+      };
+      const withEndPayload = optimizedEndImage
+        ? {
+            ...basePayload,
+            endImageDataUrl: optimizedEndImage,
+          }
+        : basePayload;
+      const payload = requestPayloadBytes(withEndPayload) > 3_500_000 ? basePayload : withEndPayload;
+
       const createResponse = await fetch('/api/fancut/videos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          project,
-          cut,
-          motionType,
-          durationSec,
-          imageDataUrl: selectedImage.imageDataUrl,
-          endImageDataUrl: nextSelectedImage?.imageDataUrl,
-        }),
+        body: JSON.stringify(payload),
       });
       let video = await parseJsonOrThrow<{
         id: string;
