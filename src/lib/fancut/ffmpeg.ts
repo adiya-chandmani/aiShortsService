@@ -3,9 +3,11 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import type { VideoSize } from './prompts';
 
 const execFileAsync = promisify(execFile);
+const FFMPEG_PATH = process.env.FFMPEG_PATH?.trim() || ffmpegInstaller.path;
 
 function dimensionsForSize(size: VideoSize) {
   const [width, height] = size.split('x').map(Number);
@@ -31,7 +33,7 @@ export async function trimAndNormalizeClip(params: {
   const { width, height } = dimensionsForSize(size);
 
   await execFileAsync(
-    'ffmpeg',
+    FFMPEG_PATH,
     [
       '-y',
       '-i',
@@ -69,7 +71,7 @@ export async function concatMp4Clips(params: {
   await fs.writeFile(listPath, content, 'utf8');
 
   await execFileAsync(
-    'ffmpeg',
+    FFMPEG_PATH,
     ['-y', '-f', 'concat', '-safe', '0', '-i', listPath, '-c', 'copy', params.outputPath],
     { maxBuffer: 20 * 1024 * 1024 }
   );

@@ -7,7 +7,7 @@ Gemini API와 Together AI를 조합해 아이디어 입력부터 플롯, 컷 이
 - 플롯 기획: `gemini-2.5-flash` + Google Search 기반 IP 리서치 + structured JSON output
 - 이미지 생성: `Together AI` 이미지 생성 API
 - 영상 생성: `deAPI` `LTX-Video 13B`
-- 최종 병합: 로컬 `ffmpeg`로 mp4 concat
+- 최종 병합: 번들된 `ffmpeg` 바이너리로 mp4 concat
 
 ## Gemini 기준 설계 포인트
 
@@ -22,7 +22,6 @@ Gemini API와 Together AI를 조합해 아이디어 입력부터 플롯, 컷 이
 
 - Node.js 20+
 - npm
-- `ffmpeg`
 - Gemini API 키
 - Together API 키
 
@@ -66,7 +65,7 @@ npm run dev
 
 ## 현재 제약
 
-- 최종 병합은 `ffmpeg`가 있는 Node 런타임을 전제로 합니다.
+- 최종 병합은 번들된 `ffmpeg` 바이너리를 우선 사용하며, 필요하면 `FFMPEG_PATH`로 경로를 덮어쓸 수 있습니다.
 - BGM/자막 합성은 현재 MVP 범위 밖입니다.
 - `LTX-Video 13B`는 이미지 모델이 아니라 비디오 모델입니다. 현재 앱에서는 영상 생성 단계에 연결되어 있습니다.
 - deAPI 비디오 모델은 `request_id` 기반 비동기 큐로 동작합니다.
