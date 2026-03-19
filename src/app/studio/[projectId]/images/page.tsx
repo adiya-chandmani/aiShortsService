@@ -84,6 +84,18 @@ export default function ImagesPage() {
     return cuts.filter((c) => !state.imagesByCut[c.cutId]?.selectedImageId);
   }, [cuts, showOnlyUnselected, state.imagesByCut]);
 
+  const heroCut = useMemo(() => {
+    const firstUnselected = cuts.find((c) => !state.imagesByCut[c.cutId]?.selectedImageId);
+    return firstUnselected ?? cuts[0];
+  }, [cuts, state.imagesByCut]);
+
+  const heroState = heroCut ? state.imagesByCut[heroCut.cutId] : undefined;
+  const heroSelected = heroState?.candidates?.find((c) => c.imageId === heroState.selectedImageId);
+  const heroFallback = heroState?.candidates?.[0];
+  const heroPreviewUrl = heroSelected?.imageDataUrl ?? heroFallback?.imageDataUrl ?? '';
+  const heroIsSelected = Boolean(heroState?.selectedImageId);
+  const heroIsGenerating = heroCut ? state.imageJobsByCut[heroCut.cutId]?.status === 'generating' : false;
+
   const progress = cuts.length === 0 ? 0 : Math.round((selectedCount / cuts.length) * 100);
 
   if (!project) {
@@ -101,74 +113,19 @@ export default function ImagesPage() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-50 transition-theme dark:bg-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <header className="mb-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-4 py-2 text-sm font-medium text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
-              <span>🖼️</span> Together AI 이미지 생성
+            <div className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1.5 text-xs font-semibold text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
+              <span aria-hidden="true">🖼️</span> 이미지 후보 선택 갤러리
             </div>
-            <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
+            <h1 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Together 이미지 모델로 컷별 후보를 생성합니다. 필요하면 컷 단위로 다시 뽑을 수 있어요.
+              컷별 후보 중 하나를 선택하면, 다음 단계에서 해당 이미지로 영상을 만들어요.
             </p>
-            <div className="mt-4">
+            <div className="mt-3">
               <WorkflowStepper projectId={projectId} />
-            </div>
-
-            <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              {imageError && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">
-                  <div className="font-semibold">이미지 생성 중 오류가 발생했습니다.</div>
-                  <div className="mt-1 break-words">{imageError}</div>
-                  <div className="mt-2 text-xs text-red-700 dark:text-red-200/80">{getImageErrorHint(imageError)}</div>
-                </div>
-              )}
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {cuts.length}개 중 <span className="text-emerald-700 dark:text-emerald-300">{selectedCount}개</span> 선택 완료
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowOnlyUnselected((v) => !v)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
-                      showOnlyUnselected
-                        ? 'bg-slate-900 text-white ring-slate-900/10 dark:bg-white dark:text-slate-900 dark:ring-white/20'
-                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {showOnlyUnselected ? '전체 보기' : '미선택만 보기'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageError(null);
-                      void (async () => {
-                        for (const cut of visibleCuts) {
-                          try {
-                            await regenerateImagesForCut(cut.cutId);
-                          } catch (error) {
-                            setImageError(error instanceof Error ? error.message : '이미지 재생성에 실패했습니다.');
-                            break;
-                          }
-                        }
-                      })();
-                    }}
-                    className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800"
-                  >
-                    {showOnlyUnselected ? '미선택 컷 재생성' : '전체 재생성'}
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-sky-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                선택이 끝나면 다음 단계에서 컷별 영상을 생성할 수 있어요.
-              </div>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -187,7 +144,120 @@ export default function ImagesPage() {
               영상 생성하기 →
             </button>
           </div>
+          </div>
         </header>
+
+        {imageError && (
+          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">
+            <div className="font-semibold">이미지 생성 중 오류가 발생했습니다.</div>
+            <div className="mt-1 break-words">{imageError}</div>
+            <div className="mt-2 text-xs text-red-700 dark:text-red-200/80">{getImageErrorHint(imageError)}</div>
+          </div>
+        )}
+
+        {/* Hero: representative cut preview + progress */}
+        <section className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 dark:bg-slate-800 dark:ring-slate-700/50">
+          <div className="grid gap-0 lg:grid-cols-12">
+            <div className="p-4 lg:col-span-7">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {heroCut ? `대표 컷 · CUT ${heroCut.order}` : '대표 컷'}
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">
+                    {heroCut?.sceneSummary ?? '컷이 아직 없습니다.'}
+                  </div>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold ring-1 ${
+                    heroIsGenerating
+                      ? 'bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-900/20 dark:text-sky-200 dark:ring-sky-700/40'
+                      : heroIsSelected
+                        ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-700/40'
+                        : 'bg-amber-50 text-amber-800 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-700/40'
+                  }`}
+                >
+                  {heroIsGenerating ? '생성 중' : heroIsSelected ? '선택 완료' : '선택 필요'}
+                </span>
+              </div>
+
+              <div className="mt-3 overflow-hidden rounded-lg ring-1 ring-slate-200/60 dark:ring-slate-700/60">
+                {heroPreviewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={heroPreviewUrl} alt="" className="aspect-[16/9] w-full bg-slate-200 object-cover dark:bg-slate-700" />
+                ) : (
+                  <div className="flex aspect-[16/9] items-center justify-center bg-slate-100 px-6 text-center text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                    <div>
+                      <div className="font-semibold">아직 대표 이미지가 없어요</div>
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">아래에서 이미지를 생성하고 하나를 선택해 주세요.</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {heroCut && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageError(null);
+                      void regenerateImagesForCut(heroCut.cutId).catch((error) => {
+                        setImageError(error instanceof Error ? error.message : '이미지 재생성에 실패했습니다.');
+                      });
+                    }}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    대표 컷 재생성
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowOnlyUnselected((v) => !v)}
+                    className={`rounded-lg px-3 py-2 text-xs font-semibold ring-1 transition ${
+                      showOnlyUnselected
+                        ? 'bg-slate-900 text-white ring-slate-900/10 dark:bg-white dark:text-slate-900 dark:ring-white/20'
+                        : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {showOnlyUnselected ? '전체 보기' : '미선택만 보기'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900 lg:col-span-5 lg:border-l lg:border-t-0">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {cuts.length}개 중 <span className="text-emerald-700 dark:text-emerald-300">{selectedCount}개</span> 선택 완료
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageError(null);
+                    void (async () => {
+                      for (const cut of visibleCuts) {
+                        try {
+                          await regenerateImagesForCut(cut.cutId);
+                        } catch (error) {
+                          setImageError(error instanceof Error ? error.message : '이미지 재생성에 실패했습니다.');
+                          break;
+                        }
+                      }
+                    })();
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                >
+                  {showOnlyUnselected ? '미선택 컷 재생성' : '전체 재생성'}
+                </button>
+              </div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-sky-500" style={{ width: `${progress}%` }} />
+              </div>
+              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                모든 컷을 선택해야 “영상 생성하기”가 활성화됩니다.
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {visibleCuts.map((cut) => {
@@ -208,12 +278,14 @@ export default function ImagesPage() {
                         <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">CUT {cut.order}</div>
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
-                            isSelected
-                              ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-700/40'
-                              : 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700'
+                            isGenerating
+                              ? 'bg-sky-50 text-sky-800 ring-sky-200 dark:bg-sky-900/20 dark:text-sky-200 dark:ring-sky-700/40'
+                              : isSelected
+                                ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-700/40'
+                                : 'bg-slate-50 text-slate-700 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700'
                           }`}
                         >
-                          {isSelected ? '선택 완료' : '선택 필요'}
+                          {isGenerating ? '생성 중' : isSelected ? '선택 완료' : '선택 필요'}
                         </span>
                       </div>
                       <div className="mt-1 line-clamp-2 text-sm font-semibold text-slate-900 dark:text-white">
@@ -270,7 +342,8 @@ export default function ImagesPage() {
                       }}
                       className="col-span-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
                     >
-                      아직 생성된 이미지가 없습니다. 눌러서 생성하기
+                      <div className="font-semibold text-slate-700 dark:text-slate-200">아직 생성된 이미지가 없어요</div>
+                      <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">눌러서 후보를 생성하고 하나를 선택하세요.</div>
                     </button>
                   ) : (
                     candidates.map((c) => {

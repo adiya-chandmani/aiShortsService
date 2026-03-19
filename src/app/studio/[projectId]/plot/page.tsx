@@ -94,57 +94,58 @@ export default function PlotPage() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-50 transition-theme dark:bg-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-              <span>🧠</span> AI 플롯 기획
-            </div>
-            <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-              {project.title}
-            </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              컷을 선택해 필드를 수정하고, 다음 단계로 이동하세요.
-            </p>
-            {regenerateError && (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">
-                {regenerateError}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <header className="mb-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <span aria-hidden="true">🧠</span> 플롯 편집 작업실
               </div>
-            )}
-            <div className="mt-4">
-              <WorkflowStepper projectId={projectId} />
+              <h1 className="mt-2 truncate text-xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                컷을 정리하고, 핵심 장면을 다듬은 뒤 이미지 단계로 넘기세요.
+              </p>
+              <div className="mt-3">
+                <WorkflowStepper projectId={projectId} />
+              </div>
+              {regenerateError && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">
+                  <div className="font-semibold">플롯 재생성 실패</div>
+                  <div className="mt-1 break-words">{regenerateError}</div>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={isRegenerating}
-              onClick={() => {
-                setRegenerateError(null);
-                setIsRegenerating(true);
-                void regenerateProjectPlot(projectId)
-                  .then(() => {
-                    router.push(`/studio/${projectId}/images`);
-                  })
-                  .catch((error) => {
-                    setRegenerateError(error instanceof Error ? error.message : '플롯 재생성에 실패했습니다.');
-                  })
-                  .finally(() => {
-                    setIsRegenerating(false);
-                  });
-              }}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              {isRegenerating ? '플롯 재생성 중...' : '플롯 다시 생성 후 이미지로'}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/studio/${projectId}/images`)}
-              className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-            >
-              이미지 생성하기 →
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => router.push(`/studio/${projectId}/images`)}
+                className="inline-flex items-center justify-center rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
+              >
+                이미지 생성하기 →
+              </button>
+              <button
+                type="button"
+                disabled={isRegenerating}
+                onClick={() => {
+                  setRegenerateError(null);
+                  setIsRegenerating(true);
+                  void regenerateProjectPlot(projectId)
+                    .then(() => {
+                      router.push(`/studio/${projectId}/images`);
+                    })
+                    .catch((error) => {
+                      setRegenerateError(error instanceof Error ? error.message : '플롯 재생성에 실패했습니다.');
+                    })
+                    .finally(() => {
+                      setIsRegenerating(false);
+                    });
+                }}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {isRegenerating ? '플롯 재생성 중…' : '플롯 다시 생성'}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -154,6 +155,9 @@ export default function PlotPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">컷 리스트</h2>
               <span className="text-xs text-slate-500 dark:text-slate-400">{orderedCuts.length}개</span>
+            </div>
+            <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-400">
+              드래그해서 컷 순서를 바꿀 수 있어요.
             </div>
             <div className="mt-4 space-y-2">
               {orderedCuts.map((cut) => {
@@ -178,7 +182,7 @@ export default function PlotPage() {
                     }}
                     className={`relative w-full rounded-lg border p-3 text-left transition ${
                       active
-                        ? 'border-sky-300 bg-sky-50 shadow-sm dark:border-sky-700 dark:bg-sky-900/20'
+                        ? 'border-sky-300 bg-sky-50 shadow-sm ring-1 ring-sky-200/50 dark:border-sky-700 dark:bg-sky-900/20 dark:ring-sky-800/30'
                         : 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'
                     }`}
                   >
@@ -194,7 +198,13 @@ export default function PlotPage() {
                           <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                             CUT {cut.order}
                           </div>
-                          <div className={`mt-1 line-clamp-2 text-sm ${active ? 'font-semibold text-slate-900 dark:text-white' : 'font-medium text-slate-800 dark:text-slate-100'}`}>
+                          <div
+                            className={`mt-1 line-clamp-2 text-sm ${
+                              active
+                                ? 'font-semibold text-slate-900 dark:text-white'
+                                : 'font-medium text-slate-800 dark:text-slate-100'
+                            }`}
+                          >
                             {cut.sceneSummary}
                           </div>
                         </div>
@@ -214,7 +224,7 @@ export default function PlotPage() {
                   선택 컷 상세 {selectedCut ? `(CUT ${selectedCut.order})` : ''}
                 </h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  등장인물/행동/구도/배경/조명/분위기 등 필드를 수정할 수 있어요.
+                  핵심 장면을 먼저 다듬고, 보조 필드로 디테일을 채워 넣으세요.
                 </p>
               </div>
               <div className="rounded-xl bg-slate-50 px-4 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-400">
@@ -223,68 +233,85 @@ export default function PlotPage() {
             </div>
 
             {selectedCut ? (
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                {/* 핵심 필드 */}
-                <div className="sm:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">장면 설명</label>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">가장 중요</span>
+              <div className="mt-6 grid gap-5">
+                {/* 핵심 카드 */}
+                <div className="rounded-lg border border-slate-200 bg-[linear-gradient(180deg,rgba(16,185,129,0.10),rgba(14,165,233,0.06),transparent_55%)] p-4 shadow-sm dark:border-slate-700 dark:bg-[linear-gradient(180deg,rgba(16,185,129,0.16),rgba(14,165,233,0.08),rgba(2,6,23,0.0)_55%)]">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">핵심</div>
+                      <h3 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">장면 설명</h3>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">이 컷을 대표하는 한 장면을 선명하게 써주세요.</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-200 dark:ring-emerald-700/40">
+                      가장 중요
+                    </span>
                   </div>
                   <textarea
                     value={selectedCut.sceneSummary}
                     onChange={(e) => updateCut(selectedCut.cutId, { sceneSummary: e.target.value })}
                     rows={5}
-                    className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200/40 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-emerald-500 dark:focus:ring-emerald-900/40"
+                    className="mt-3 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-200/40 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-emerald-500 dark:focus:ring-emerald-900/40"
                   />
+
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">핵심 스토리 포인트</label>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">요약</span>
+                    </div>
+                    <input
+                      value={selectedCut.storyPoint}
+                      onChange={(e) => updateCut(selectedCut.cutId, { storyPoint: e.target.value })}
+                      className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-200/40 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-slate-800/40"
+                      placeholder="예) 클라이맥스, 반전, 엔딩"
+                    />
+                  </div>
                 </div>
 
-                <Field
-                  label="등장인물"
-                  value={selectedCut.characters}
-                  onChange={(v) => updateCut(selectedCut.cutId, { characters: v })}
-                  placeholder="예) 주인공 / 라이벌"
-                />
-                <Field
-                  label="감정/행동"
-                  value={selectedCut.action}
-                  onChange={(v) => updateCut(selectedCut.cutId, { action: v })}
-                  placeholder="예) 숨 가쁜 드리블, 눈빛 교환"
-                />
-                <Field
-                  label="구도"
-                  value={selectedCut.composition}
-                  onChange={(v) => updateCut(selectedCut.cutId, { composition: v })}
-                  placeholder="예) 로우 앵글 클로즈업"
-                />
-                <Field
-                  label="배경"
-                  value={selectedCut.background}
-                  onChange={(v) => updateCut(selectedCut.cutId, { background: v })}
-                  placeholder="예) 체육관, 관중석"
-                />
-                <Field
-                  label="조명"
-                  value={selectedCut.lighting}
-                  onChange={(v) => updateCut(selectedCut.cutId, { lighting: v })}
-                  placeholder="예) 골든아워, 네온"
-                />
-                <Field
-                  label="분위기"
-                  value={selectedCut.mood}
-                  onChange={(v) => updateCut(selectedCut.cutId, { mood: v })}
-                  placeholder="예) 뜨거운, 긴장감 있는"
-                />
-
-                <div className="sm:col-span-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">핵심 스토리 포인트</label>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">요약</span>
+                {/* 보조 필드 */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="sm:col-span-2 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-300">보조</div>
+                      <h3 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">디테일</h3>
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">선택 입력</div>
                   </div>
-                  <input
-                    value={selectedCut.storyPoint}
-                    onChange={(e) => updateCut(selectedCut.cutId, { storyPoint: e.target.value })}
-                    className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-200/40 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-slate-800/40"
-                    placeholder="예) 클라이맥스, 반전, 엔딩"
+
+                  <Field
+                    label="등장인물"
+                    value={selectedCut.characters}
+                    onChange={(v) => updateCut(selectedCut.cutId, { characters: v })}
+                    placeholder="예) 주인공 / 라이벌"
+                  />
+                  <Field
+                    label="감정/행동"
+                    value={selectedCut.action}
+                    onChange={(v) => updateCut(selectedCut.cutId, { action: v })}
+                    placeholder="예) 숨 가쁜 드리블, 눈빛 교환"
+                  />
+                  <Field
+                    label="구도"
+                    value={selectedCut.composition}
+                    onChange={(v) => updateCut(selectedCut.cutId, { composition: v })}
+                    placeholder="예) 로우 앵글 클로즈업"
+                  />
+                  <Field
+                    label="배경"
+                    value={selectedCut.background}
+                    onChange={(v) => updateCut(selectedCut.cutId, { background: v })}
+                    placeholder="예) 체육관, 관중석"
+                  />
+                  <Field
+                    label="조명"
+                    value={selectedCut.lighting}
+                    onChange={(v) => updateCut(selectedCut.cutId, { lighting: v })}
+                    placeholder="예) 골든아워, 네온"
+                  />
+                  <Field
+                    label="분위기"
+                    value={selectedCut.mood}
+                    onChange={(v) => updateCut(selectedCut.cutId, { mood: v })}
+                    placeholder="예) 뜨거운, 긴장감 있는"
                   />
                 </div>
 
