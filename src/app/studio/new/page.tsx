@@ -510,7 +510,7 @@ export default function StudioNewPage() {
                   <ul className="mt-2 list-disc space-y-1 pl-4">
                     <li>Gemini 정책에 따라 고유 IP/실존인물은 inspired-by 형태로 완화될 수 있습니다.</li>
                     <li>업로드 이미지는 저작권/초상권을 확인해주세요.</li>
-                    <li>영상은 Seedance 1.0 Lite 기준으로 생성되며, 현재는 9:16 / 16:9 중심으로 최적화되어 있습니다.</li>
+                    <li>영상은 PixVerse 기준으로 생성되며, 현재는 9:16 / 16:9 중심으로 최적화되어 있습니다.</li>
                   </ul>
                 </div>
               </div>

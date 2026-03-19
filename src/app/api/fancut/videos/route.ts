@@ -3,7 +3,10 @@ import {
   dataUrlToBase64,
   togetherJson,
   togetherVideoDimensions,
+  togetherVideoFallbackModel,
+  togetherVideoFps,
   togetherVideoModel,
+  togetherVideoSeconds,
   TogetherRequestError,
   type TogetherVideoResponse,
 } from '@/lib/fancut/together';
@@ -24,8 +27,6 @@ type CreateVideoRequest = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateVideoRequest;
-    const model = togetherVideoModel();
-    const dimensions = togetherVideoDimensions(body.project.aspectRatio);
     const frameImages: Array<Record<string, unknown>> = [
       {
         frame: 0,
@@ -40,9 +41,12 @@ export async function POST(request: Request) {
       });
     }
 
-    const created = await togetherJson<TogetherVideoResponse>('/videos', {
-      method: 'POST',
-      body: JSON.stringify({
+    const createVideo = (model: string) => {
+      const dimensions = togetherVideoDimensions(model, body.project.aspectRatio);
+      const seconds = togetherVideoSeconds(model, body.durationSec);
+      const fps = togetherVideoFps(model);
+
+      return {
         model,
         prompt: buildVideoPrompt({
           project: body.project,
@@ -52,17 +56,42 @@ export async function POST(request: Request) {
         }),
         width: dimensions.width,
         height: dimensions.height,
-        seconds: String(body.durationSec),
+        seconds,
         steps: 16,
+        ...(fps ? { fps } : {}),
         frame_images: frameImages,
-      }),
-    });
+      };
+    };
+
+    const requestedModel = togetherVideoModel();
+    const fallbackModel = togetherVideoFallbackModel(requestedModel);
+
+    let created: TogetherVideoResponse;
+    let usedModel = requestedModel;
+
+    try {
+      created = await togetherJson<TogetherVideoResponse>('/videos', {
+        method: 'POST',
+        body: JSON.stringify(createVideo(requestedModel)),
+      });
+    } catch (error) {
+      if (!(error instanceof TogetherRequestError) || error.status !== 404 || !fallbackModel) {
+        throw error;
+      }
+
+      usedModel = fallbackModel;
+      created = await togetherJson<TogetherVideoResponse>('/videos', {
+        method: 'POST',
+        body: JSON.stringify(createVideo(fallbackModel)),
+      });
+    }
 
     return NextResponse.json({
       id: created.id,
       status: created.status,
       progress: created.status === 'completed' ? 100 : 0,
-      seconds: body.durationSec,
+      model: created.model || usedModel,
+      seconds: created.seconds ?? togetherVideoSeconds(usedModel, body.durationSec),
     });
   } catch (error) {
     const status = error instanceof TogetherRequestError ? error.status : 500;

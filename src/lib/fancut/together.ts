@@ -9,7 +9,8 @@ const TOGETHER_BASE_URL = normalizeTogetherBaseUrl(process.env.TOGETHER_BASE_URL
 const MAX_RETRIES = 2;
 const DEFAULT_IMAGE_MODEL = 'black-forest-labs/FLUX.1-schnell';
 const DEFAULT_REFERENCE_IMAGE_MODEL = 'black-forest-labs/FLUX.1-kontext-pro';
-const DEFAULT_VIDEO_MODEL = 'ByteDance/Seedance-1.0-lite';
+const DEFAULT_VIDEO_MODEL = 'pixverse/pixverse-v5.6';
+const PIXVERSE_FALLBACK_VIDEO_MODEL = 'pixverse/pixverse-v5';
 
 export class TogetherRequestError extends Error {
   status: number;
@@ -141,10 +142,48 @@ export function togetherVideoModel() {
   return process.env.TOGETHER_VIDEO_MODEL?.trim() || DEFAULT_VIDEO_MODEL;
 }
 
-export function togetherVideoDimensions(aspectRatio: AspectRatio) {
+export function togetherVideoFallbackModel(model: string) {
+  const lower = model.toLowerCase();
+
+  if (lower === DEFAULT_VIDEO_MODEL.toLowerCase()) {
+    return PIXVERSE_FALLBACK_VIDEO_MODEL;
+  }
+
+  return undefined;
+}
+
+export function togetherVideoDimensions(model: string, aspectRatio: AspectRatio) {
+  const lower = model.toLowerCase();
+
+  if (lower.includes('pixverse')) {
+    return aspectRatio === '16:9'
+      ? { width: 960, height: 540, size: '960x540' }
+      : { width: 540, height: 960, size: '540x960' };
+  }
+
   return aspectRatio === '16:9'
-    ? { width: 960, height: 416, size: '960x416' }
-    : { width: 416, height: 960, size: '416x960' };
+    ? { width: 1280, height: 720, size: '1280x720' }
+    : { width: 720, height: 1280, size: '720x1280' };
+}
+
+export function togetherVideoSeconds(model: string, durationSec: 3 | 5) {
+  const lower = model.toLowerCase();
+
+  if (lower.includes('pixverse') || lower.includes('seedance')) {
+    return '5';
+  }
+
+  return String(durationSec);
+}
+
+export function togetherVideoFps(model: string) {
+  const lower = model.toLowerCase();
+
+  if (lower.includes('pixverse')) {
+    return 16;
+  }
+
+  return undefined;
 }
 
 export function dataUrlToBase64(dataUrl: string) {
