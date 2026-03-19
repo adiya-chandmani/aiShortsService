@@ -13,6 +13,36 @@ function classNames(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');
 }
 
+function YouTubeLogo({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="2.5" y="5.5" width="19" height="13" rx="4.5" fill="#FF0033" />
+      <path d="M10 9.1v5.8l5-2.9-5-2.9Z" fill="white" />
+    </svg>
+  );
+}
+
+function TikTokLogo({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="#111827" />
+      <path d="M13.7 6.3c.5 1.2 1.3 2 2.5 2.5v2.1c-1-.1-1.8-.5-2.5-1v5.1a3.7 3.7 0 1 1-3.7-3.7c.2 0 .5 0 .7.1v2.2a1.7 1.7 0 1 0 1 .2V6.3h2Z" fill="#fff" />
+      <path d="M11.1 9.1v1.3a2.9 2.9 0 0 0-1 .1 3.7 3.7 0 1 0 3.7 3.7V9.1c.6.5 1.4.8 2.3 1V8.8c-1.1-.4-1.9-1.2-2.4-2.5h-1v7.5a2 2 0 1 1-1.6-1.8v-2Z" fill="#25F4EE" opacity="0.8" />
+      <path d="M13 7.3c.5 1.1 1.2 1.8 2.3 2.3v.8a4.8 4.8 0 0 1-2.3-1v5a2.7 2.7 0 1 1-2.7-2.7h.2v.9h-.2a1.8 1.8 0 1 0 1.8 1.8V7.3h.9Z" fill="#FE2C55" opacity="0.75" />
+    </svg>
+  );
+}
+
+function PlatformLogo({
+  platform,
+  className = 'h-5 w-5',
+}: {
+  platform: SocialPlatform;
+  className?: string;
+}) {
+  return platform === 'youtube' ? <YouTubeLogo className={className} /> : <TikTokLogo className={className} />;
+}
+
 async function readJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let message = '요청에 실패했습니다.';
@@ -306,17 +336,21 @@ export default function RenderPage() {
                   type="button"
                   onClick={() => handleOpenUpload('youtube')}
                   disabled={!render?.outputObjectUrl}
-                  className="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                  aria-label="YouTube 업로드 열기"
+                  title="YouTube 업로드 열기"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                 >
-                  YouTube Shorts 업로드
+                  <YouTubeLogo />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleOpenUpload('tiktok')}
                   disabled={!render?.outputObjectUrl}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  aria-label="TikTok 업로드 열기"
+                  title="TikTok 업로드 열기"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                  TikTok mock 테스트
+                  <TikTokLogo />
                 </button>
               </div>
             </div>
@@ -423,9 +457,11 @@ export default function RenderPage() {
                     type="button"
                     disabled={!render?.outputObjectUrl}
                     onClick={() => handleOpenUpload('youtube')}
-                    className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300"
+                    aria-label="YouTube 업로드 열기"
+                    title="YouTube 업로드 열기"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300"
                   >
-                    YouTube Shorts 업로드
+                    <YouTubeLogo />
                   </button>
                   <button
                     type="button"
@@ -522,8 +558,10 @@ export default function RenderPage() {
                         setSelectedPlatform(platform);
                         setUploadState({ phase: 'idle' });
                       }}
+                      aria-label={platform === 'youtube' ? 'YouTube 선택' : 'TikTok 선택'}
+                      title={platform === 'youtube' ? 'YouTube 선택' : 'TikTok 선택'}
                       className={classNames(
-                        'rounded-full px-4 py-2 text-sm font-semibold ring-1 transition',
+                        'inline-flex h-11 w-11 items-center justify-center rounded-full ring-1 transition',
                         selectedPlatform === platform
                           ? platform === 'youtube'
                             ? 'bg-red-600 text-white ring-red-600'
@@ -531,7 +569,7 @@ export default function RenderPage() {
                           : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800'
                       )}
                     >
-                      {platform === 'youtube' ? 'YouTube Shorts' : 'TikTok mock'}
+                      <PlatformLogo platform={platform} />
                     </button>
                   ))}
                 </div>
@@ -755,12 +793,12 @@ export default function RenderPage() {
                         'inline-flex flex-1 items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50',
                         selectedPlatform === 'youtube' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-900 hover:bg-slate-700 dark:bg-white dark:text-slate-900'
                       )}
+                      aria-label={selectedPlatform === 'youtube' ? 'YouTube 업로드 실행' : 'TikTok 업로드 실행'}
+                      title={selectedPlatform === 'youtube' ? 'YouTube 업로드 실행' : 'TikTok 업로드 실행'}
                     >
                       {uploadState.phase === 'uploading'
                         ? '업로드 중…'
-                        : selectedPlatform === 'youtube'
-                          ? 'YouTube Shorts 업로드'
-                          : 'TikTok mock 업로드'}
+                        : <PlatformLogo platform={selectedPlatform} className="h-6 w-6" />}
                     </button>
                     <button
                       type="button"
