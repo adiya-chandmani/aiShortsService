@@ -355,41 +355,6 @@ export default function RenderPage() {
               </div>
             </div>
 
-            <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-700">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">추가 편집(준비 중)</h3>
-              <div className="mt-3 grid gap-2">
-                {[
-                  {
-                    title: '배경음악(BGM)',
-                    desc: '현재 MVP에서는 오디오 합성을 지원하지 않습니다.',
-                  },
-                  {
-                    title: '자막/캡션',
-                    desc: '현재 MVP에서는 자막 템플릿을 지원하지 않습니다.',
-                  },
-                  {
-                    title: '트랜지션/템포',
-                    desc: '현재 MVP에서는 컷 병합 중심으로 렌더합니다.',
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-3 opacity-80 dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900 dark:text-white">{item.title}</div>
-                        <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">{item.desc}</div>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                        준비 중
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href="/studio/new"
