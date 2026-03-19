@@ -15,46 +15,48 @@ const STYLE_PRESETS: Array<{ value: StylePreset; label: string; desc: string }> 
   { value: 'minimal', label: '미니멀', desc: '단순한 형태, 강한 메시지' },
 ];
 
-const GALLERY_TILES = Array.from({ length: 18 }).map((_, i) => {
-  const palettes = [
-    ['#0ea5e9', '#22c55e', '#111827'],
-    ['#f97316', '#fb7185', '#111827'],
-    ['#a78bfa', '#38bdf8', '#0b0b0d'],
-    ['#10b981', '#06b6d4', '#0b0b0d'],
-  ];
-  const p = palettes[i % palettes.length];
-  return {
-    id: i,
-    title: 'Video',
-    gradient: `linear-gradient(135deg, ${p[0]} 0%, ${p[1]} 55%, ${p[2]} 100%)`,
+type CharacterPhoto = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
+type JikanCharacter = {
+  mal_id: number;
+  name: string;
+  images?: {
+    jpg?: { image_url?: string };
+    webp?: { image_url?: string };
   };
-});
+};
 
-const POPULAR_CHARACTERS = [
-  { name: '소닉', tag: 'speed icon' },
-  { name: '나루토', tag: 'battle shonen' },
-  { name: '루피', tag: 'adventure lead' },
-  { name: '고죠', tag: 'modern anime' },
-  { name: '엘사', tag: 'fantasy queen' },
-  { name: '배트맨', tag: 'dark hero' },
-  { name: '스파이더맨', tag: 'marvel icon' },
-  { name: '마리오', tag: 'game legend' },
-  { name: '미키', tag: 'classic mascot' },
-  { name: '피카츄', tag: 'global mascot' },
-  { name: '슈퍼맨', tag: 'hero symbol' },
-  { name: '도라에몽', tag: 'timeless friend' },
-] as const;
+const CHARACTER_FEED_URL = 'https://api.jikan.moe/v4/top/characters?limit=18';
+const BACKDROP_PLACEHOLDER_COUNT = 10;
+const TICKER_PLACEHOLDER_COUNT = 7;
 
-type PopularCharacter = (typeof POPULAR_CHARACTERS)[number];
-
-function Tile({ gradient }: { gradient: string }) {
+function CharacterBackdropTile({
+  character,
+  tall = false,
+}: {
+  character?: CharacterPhoto;
+  tall?: boolean;
+}) {
   return (
-    <div className="relative overflow-hidden rounded-lg ring-1 ring-white/10">
-      <div className="aspect-[4/3] w-full" style={{ backgroundImage: gradient }} />
-      <div className="absolute left-3 top-3 rounded-lg bg-black/40 px-2 py-1 text-[10px] font-semibold text-white/90 ring-1 ring-white/15">
-        Video
+    <div className="relative overflow-hidden rounded-[24px] ring-1 ring-white/10">
+      <div className={tall ? 'aspect-[4/5] w-full' : 'aspect-[4/3] w-full'}>
+        {character ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={character.imageUrl}
+            alt={character.name}
+            className="h-full w-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="h-full w-full animate-pulse bg-gradient-to-br from-slate-300 via-slate-200 to-slate-100 dark:from-white/15 dark:via-white/8 dark:to-white/5" />
+        )}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/12 to-transparent" />
     </div>
   );
 }
@@ -64,11 +66,17 @@ function CharacterTickerRow({
   reverse = false,
   durationSec = 22,
 }: {
-  items: readonly PopularCharacter[];
+  items: readonly CharacterPhoto[];
   reverse?: boolean;
   durationSec?: number;
 }) {
-  const sequence = [...items, ...items];
+  const sequence = items.length
+    ? [...items, ...items]
+    : Array.from({ length: TICKER_PLACEHOLDER_COUNT * 2 }, (_, index) => ({
+        id: `placeholder-${index}`,
+        name: '',
+        imageUrl: '',
+      }));
 
   return (
     <div className="relative overflow-hidden">
@@ -78,16 +86,21 @@ function CharacterTickerRow({
       >
         {sequence.map((character, index) => (
           <div
-            key={`${character.name}-${index}`}
-            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-left shadow-[0_8px_30px_rgba(15,23,42,0.18)] backdrop-blur"
+            key={`${character.id}-${index}`}
+            className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[22px] border border-white/10 bg-white/8 shadow-[0_12px_30px_rgba(15,23,42,0.22)] backdrop-blur"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 text-[11px] font-black text-slate-900">
-              {character.name.slice(0, 1)}
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-white/90">{character.name}</div>
-              <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">{character.tag}</div>
-            </div>
+            {character.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={character.imageUrl}
+                alt={character.name}
+                className="h-full w-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="h-full w-full animate-pulse bg-gradient-to-br from-white/18 via-white/10 to-transparent" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </div>
         ))}
       </div>
@@ -319,6 +332,7 @@ export default function StudioNewPage() {
   const [videoDurationSec, setVideoDurationSec] = useState<15 | 30>(15);
   const [resolution, setResolution] = useState<'720p' | '1080p'>('720p');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
+  const [characterPhotos, setCharacterPhotos] = useState<CharacterPhoto[]>([]);
   const errorMeta = useMemo(() => getSubmitErrorMeta(submitError), [submitError]);
 
   useEffect(() => {
@@ -337,6 +351,49 @@ export default function StudioNewPage() {
     if (!p) return;
     setIdeaText((prev) => (prev.trim().length ? prev : p));
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadPopularCharacterPhotos = async () => {
+      try {
+        const response = await fetch(CHARACTER_FEED_URL, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`character feed request failed: ${response.status}`);
+        }
+        const payload = (await response.json()) as { data?: JikanCharacter[] };
+        const nextCharacters = Array.isArray(payload.data)
+          ? payload.data
+              .map((item) => ({
+                id: String(item.mal_id),
+                name: item.name,
+                imageUrl: item.images?.webp?.image_url ?? item.images?.jpg?.image_url ?? '',
+              }))
+              .filter((item) => item.imageUrl)
+              .slice(0, 18)
+          : [];
+        setCharacterPhotos(nextCharacters);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Failed to load character feed', error);
+          setCharacterPhotos([]);
+        }
+      }
+    };
+
+    void loadPopularCharacterPhotos();
+
+    return () => controller.abort();
+  }, []);
+
+  const backdropCharacters = useMemo(
+    () => characterPhotos.slice(0, BACKDROP_PLACEHOLDER_COUNT),
+    [characterPhotos],
+  );
+  const topTickerCharacters = useMemo(() => characterPhotos.slice(0, 9), [characterPhotos]);
+  const bottomTickerCharacters = useMemo(() => characterPhotos.slice(9, 18), [characterPhotos]);
 
   const handleReferenceUpload = async (file: File) => {
     const reader = new FileReader();
@@ -578,29 +635,33 @@ export default function StudioNewPage() {
       }
     >
       <div className="relative">
-        {/* Gallery grid - Artlist-like */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {GALLERY_TILES.map((t, idx) => (
-            <div key={t.id} className={idx % 7 === 0 ? 'lg:row-span-2' : ''}>
-              <Tile gradient={t.gradient} />
-            </div>
-          ))}
+          {(backdropCharacters.length
+            ? backdropCharacters
+            : Array.from({ length: BACKDROP_PLACEHOLDER_COUNT }, () => undefined)
+          ).map((character, idx) => {
+            const tall = idx % 5 === 0;
+            return (
+              <div key={character?.id ?? `placeholder-${idx}`} className={tall ? 'lg:row-span-2' : ''}>
+                <CharacterBackdropTile character={character} tall={tall} />
+              </div>
+            );
+          })}
         </div>
 
-        {/* Center empty-state overlay - LTX-like */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-full max-w-3xl rounded-[30px] bg-black/34 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur sm:px-8">
+          <div className="w-full max-w-3xl rounded-[30px] bg-black/38 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur-[22px] sm:px-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
               Gen Space
             </div>
-            <div className="mt-4 text-2xl font-semibold tracking-tight text-white/90 sm:text-3xl">인기 캐릭터 무드로 바로 시작</div>
+            <div className="mt-4 text-2xl font-semibold tracking-tight text-white/92 sm:text-3xl">캐릭터 무드 보드로 바로 시작</div>
             <div className="mt-2 text-sm text-white/58">
-              소닉, 나루토, 루피 같은 대중적인 캐릭터 감성을 참고해 아이디어를 빠르게 구체화하세요.
+              인기 캐릭터 이미지 레퍼런스를 보며 톤과 에너지를 빠르게 잡고, 바로 숏폼 플롯으로 연결하세요.
             </div>
 
             <div className="mt-6 space-y-3">
-              <CharacterTickerRow items={POPULAR_CHARACTERS.slice(0, 6)} durationSec={20} />
-              <CharacterTickerRow items={POPULAR_CHARACTERS.slice(6)} reverse durationSec={24} />
+              <CharacterTickerRow items={topTickerCharacters} durationSec={20} />
+              <CharacterTickerRow items={bottomTickerCharacters} reverse durationSec={24} />
             </div>
 
             <div className="mt-5 text-xs text-white/42">아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.</div>
