@@ -30,6 +30,23 @@ const GALLERY_TILES = Array.from({ length: 18 }).map((_, i) => {
   };
 });
 
+const POPULAR_CHARACTERS = [
+  { name: '소닉', tag: 'speed icon' },
+  { name: '나루토', tag: 'battle shonen' },
+  { name: '루피', tag: 'adventure lead' },
+  { name: '고죠', tag: 'modern anime' },
+  { name: '엘사', tag: 'fantasy queen' },
+  { name: '배트맨', tag: 'dark hero' },
+  { name: '스파이더맨', tag: 'marvel icon' },
+  { name: '마리오', tag: 'game legend' },
+  { name: '미키', tag: 'classic mascot' },
+  { name: '피카츄', tag: 'global mascot' },
+  { name: '슈퍼맨', tag: 'hero symbol' },
+  { name: '도라에몽', tag: 'timeless friend' },
+] as const;
+
+type PopularCharacter = (typeof POPULAR_CHARACTERS)[number];
+
 function Tile({ gradient }: { gradient: string }) {
   return (
     <div className="relative overflow-hidden rounded-lg ring-1 ring-white/10">
@@ -38,6 +55,42 @@ function Tile({ gradient }: { gradient: string }) {
         Video
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+    </div>
+  );
+}
+
+function CharacterTickerRow({
+  items,
+  reverse = false,
+  durationSec = 22,
+}: {
+  items: readonly PopularCharacter[];
+  reverse?: boolean;
+  durationSec?: number;
+}) {
+  const sequence = [...items, ...items];
+
+  return (
+    <div className="relative overflow-hidden">
+      <div
+        className={`flex min-w-max gap-3 ${reverse ? 'gen-space-marquee-reverse' : 'gen-space-marquee'}`}
+        style={{ animationDuration: `${durationSec}s` }}
+      >
+        {sequence.map((character, index) => (
+          <div
+            key={`${character.name}-${index}`}
+            className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-left shadow-[0_8px_30px_rgba(15,23,42,0.18)] backdrop-blur"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 via-cyan-300 to-emerald-300 text-[11px] font-black text-slate-900">
+              {character.name.slice(0, 1)}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white/90">{character.name}</div>
+              <div className="text-[11px] uppercase tracking-[0.16em] text-white/45">{character.tag}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -264,7 +317,7 @@ export default function StudioNewPage() {
   // LTX 스타일 프롬프트 설정(데모 UI)
   const [openMenu, setOpenMenu] = useState<MenuKey | null>(null);
   const [videoDurationSec, setVideoDurationSec] = useState<15 | 30>(15);
-  const [resolution, setResolution] = useState<'720p' | '1080p'>('1080p');
+  const [resolution, setResolution] = useState<'720p' | '1080p'>('720p');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
   const errorMeta = useMemo(() => getSubmitErrorMeta(submitError), [submitError]);
 
@@ -536,28 +589,51 @@ export default function StudioNewPage() {
 
         {/* Center empty-state overlay - LTX-like */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="rounded-[28px] bg-black/30 px-10 py-8 text-center ring-1 ring-white/10 backdrop-blur">
-            <div className="mx-auto flex w-[240px] items-center justify-center">
-              <div className="relative h-20 w-56">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute bottom-0 left-1/2 h-16 w-16 -translate-x-1/2 overflow-hidden rounded-2xl ring-1 ring-white/15"
-                    style={{
-                      transform: `translateX(${(i - 2) * 34}px) rotate(${(i - 2) * 8}deg)`,
-                      backgroundImage: GALLERY_TILES[(i * 3) % GALLERY_TILES.length].gradient,
-                    }}
-                  />
-                ))}
-              </div>
+          <div className="w-full max-w-3xl rounded-[30px] bg-black/34 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur sm:px-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
+              Gen Space
             </div>
-            <div className="mt-4 text-sm font-semibold text-white/80">This space</div>
-            <div className="text-sm text-white/60">is waiting for your</div>
-            <div className="mt-2 text-sm font-semibold text-white/80">first commercial.</div>
-            <div className="mt-4 text-xs text-white/45">아래 프롬프트에 아이디어를 입력하고 생성 버튼을 눌러 시작하세요.</div>
+            <div className="mt-4 text-2xl font-semibold tracking-tight text-white/90 sm:text-3xl">인기 캐릭터 무드로 바로 시작</div>
+            <div className="mt-2 text-sm text-white/58">
+              소닉, 나루토, 루피 같은 대중적인 캐릭터 감성을 참고해 아이디어를 빠르게 구체화하세요.
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <CharacterTickerRow items={POPULAR_CHARACTERS.slice(0, 6)} durationSec={20} />
+              <CharacterTickerRow items={POPULAR_CHARACTERS.slice(6)} reverse durationSec={24} />
+            </div>
+
+            <div className="mt-5 text-xs text-white/42">아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.</div>
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes gen-space-marquee {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @keyframes gen-space-marquee-reverse {
+          from {
+            transform: translateX(-50%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .gen-space-marquee {
+          animation: gen-space-marquee linear infinite;
+        }
+
+        .gen-space-marquee-reverse {
+          animation: gen-space-marquee-reverse linear infinite;
+        }
+      `}</style>
     </StudioShell>
   );
 }

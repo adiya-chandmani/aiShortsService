@@ -244,7 +244,7 @@ function normalizeProject(project: FanCutProject): FanCutProject {
   return {
     ...project,
     aspectRatio: project.aspectRatio ?? '9:16',
-    resolution: project.resolution ?? '1080p',
+    resolution: project.resolution ?? '720p',
   };
 }
 
