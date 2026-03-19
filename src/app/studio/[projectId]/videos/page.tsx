@@ -72,8 +72,11 @@ export default function VideosPage() {
     if (cutIds.length === 0) return;
     setBulkBusy(true);
     try {
-      for (const cutId of cutIds) {
+      for (const [index, cutId] of cutIds.entries()) {
         await handleGenerate(cutId);
+        if (index < cutIds.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 4000));
+        }
       }
     } finally {
       setBulkBusy(false);

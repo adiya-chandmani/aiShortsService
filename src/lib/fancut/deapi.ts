@@ -12,6 +12,7 @@ function normalizeDeapiBaseUrl(raw?: string) {
 
 const DEAPI_BASE_URL = normalizeDeapiBaseUrl(process.env.DEAPI_BASE_URL);
 const DEFAULT_VIDEO_MODEL = 'Ltxv_13B_0_9_8_Distilled_FP8';
+const MAX_RETRIES = 4;
 
 export class DeapiRequestError extends Error {
   status: number;
@@ -68,12 +69,38 @@ async function parseErrorMessage(response: Response) {
   }
 }
 
-export async function deapiJson<T>(path: string, init: RequestInit): Promise<T> {
+function getRetryDelayMs(response: Response, attempt: number) {
+  const retryAfter = response.headers.get('retry-after');
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return seconds * 1000;
+    }
+
+    const dateMs = Date.parse(retryAfter);
+    if (Number.isFinite(dateMs)) {
+      return Math.max(1000, dateMs - Date.now());
+    }
+  }
+
+  return 4000 * (attempt + 1);
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function deapiJson<T>(path: string, init: RequestInit, attempt = 0): Promise<T> {
   const response = await fetch(`${DEAPI_BASE_URL}${path}`, {
     ...init,
     headers: makeHeaders(init.headers),
     cache: 'no-store',
   });
+
+  if ((response.status === 429 || response.status === 503 || response.status === 504) && attempt < MAX_RETRIES) {
+    await sleep(getRetryDelayMs(response, attempt));
+    return deapiJson<T>(path, init, attempt + 1);
+  }
 
   if (!response.ok) {
     throw new DeapiRequestError(await parseErrorMessage(response), response.status);

@@ -443,6 +443,12 @@ function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
+function isRateLimitError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes('429') || message.includes('too many attempts') || message.includes('too many requests');
+}
+
 function selectedImageForCut(state: State, cutId: string) {
   const imageState = state.imagesByCut[cutId];
   return imageState?.candidates.find((candidate) => candidate.imageId === imageState.selectedImageId);
@@ -804,11 +810,18 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       }>(createResponse);
 
       while (video.status === 'queued' || video.status === 'in_progress') {
-        await sleep(5000);
-        const pollResponse = await fetch(`/api/fancut/videos/${video.id}`, {
-          cache: 'no-store',
-        });
-        video = await parseJsonOrThrow<typeof video>(pollResponse);
+        await sleep(12_000);
+        try {
+          const pollResponse = await fetch(`/api/fancut/videos/${video.id}`, {
+            cache: 'no-store',
+          });
+          video = await parseJsonOrThrow<typeof video>(pollResponse);
+        } catch (error) {
+          if (!isRateLimitError(error)) {
+            throw error;
+          }
+          await sleep(20_000);
+        }
       }
 
       if (video.status === 'failed') {
