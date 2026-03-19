@@ -331,16 +331,16 @@ export default function RenderPage() {
                   MVP
                 </span>
               </div>
-              <div className="mt-4 grid gap-2">
+              <div className="mt-4 flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => handleOpenUpload('youtube')}
                   disabled={!render?.outputObjectUrl}
                   aria-label="YouTube 업로드 열기"
                   title="YouTube 업로드 열기"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                  className="inline-flex h-12 w-16 items-center justify-center rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
                 >
-                  <YouTubeLogo />
+                  <YouTubeLogo className="h-6 w-6" />
                 </button>
                 <button
                   type="button"
@@ -348,9 +348,9 @@ export default function RenderPage() {
                   disabled={!render?.outputObjectUrl}
                   aria-label="TikTok 업로드 열기"
                   title="TikTok 업로드 열기"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="inline-flex h-12 w-16 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                  <TikTokLogo />
+                  <TikTokLogo className="h-6 w-6" />
                 </button>
               </div>
             </div>
