@@ -32,7 +32,6 @@ type JikanCharacter = {
 
 const CHARACTER_FEED_URL = 'https://api.jikan.moe/v4/top/characters?limit=18';
 const BACKDROP_PLACEHOLDER_COUNT = 10;
-const TICKER_PLACEHOLDER_COUNT = 7;
 
 function CharacterBackdropTile({
   character,
@@ -57,53 +56,6 @@ function CharacterBackdropTile({
         )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/12 to-transparent" />
-    </div>
-  );
-}
-
-function CharacterTickerRow({
-  items,
-  reverse = false,
-  durationSec = 22,
-}: {
-  items: readonly CharacterPhoto[];
-  reverse?: boolean;
-  durationSec?: number;
-}) {
-  const sequence = items.length
-    ? [...items, ...items]
-    : Array.from({ length: TICKER_PLACEHOLDER_COUNT * 2 }, (_, index) => ({
-        id: `placeholder-${index}`,
-        name: '',
-        imageUrl: '',
-      }));
-
-  return (
-    <div className="relative overflow-hidden">
-      <div
-        className={`flex min-w-max gap-3 ${reverse ? 'gen-space-marquee-reverse' : 'gen-space-marquee'}`}
-        style={{ animationDuration: `${durationSec}s` }}
-      >
-        {sequence.map((character, index) => (
-          <div
-            key={`${character.id}-${index}`}
-            className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[22px] border border-white/10 bg-white/8 shadow-[0_12px_30px_rgba(15,23,42,0.22)] backdrop-blur"
-          >
-            {character.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={character.imageUrl}
-                alt={character.name}
-                className="h-full w-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="h-full w-full animate-pulse bg-gradient-to-br from-white/18 via-white/10 to-transparent" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -392,8 +344,6 @@ export default function StudioNewPage() {
     () => characterPhotos.slice(0, BACKDROP_PLACEHOLDER_COUNT),
     [characterPhotos],
   );
-  const topTickerCharacters = useMemo(() => characterPhotos.slice(0, 9), [characterPhotos]);
-  const bottomTickerCharacters = useMemo(() => characterPhotos.slice(9, 18), [characterPhotos]);
 
   const handleReferenceUpload = async (file: File) => {
     const reader = new FileReader();
@@ -659,42 +609,10 @@ export default function StudioNewPage() {
               인기 캐릭터 이미지 레퍼런스를 보며 톤과 에너지를 빠르게 잡고, 바로 숏폼 플롯으로 연결하세요.
             </div>
 
-            <div className="mt-6 space-y-3">
-              <CharacterTickerRow items={topTickerCharacters} durationSec={20} />
-              <CharacterTickerRow items={bottomTickerCharacters} reverse durationSec={24} />
-            </div>
-
-            <div className="mt-5 text-xs text-white/42">아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.</div>
+            <div className="mt-6 text-xs text-white/42">아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.</div>
           </div>
         </div>
       </div>
-      <style jsx>{`
-        @keyframes gen-space-marquee {
-          from {
-            transform: translateX(0);
-          }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-
-        @keyframes gen-space-marquee-reverse {
-          from {
-            transform: translateX(-50%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-
-        .gen-space-marquee {
-          animation: gen-space-marquee linear infinite;
-        }
-
-        .gen-space-marquee-reverse {
-          animation: gen-space-marquee-reverse linear infinite;
-        }
-      `}</style>
     </StudioShell>
   );
 }
