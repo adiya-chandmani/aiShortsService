@@ -45,8 +45,8 @@ export async function POST(request: Request) {
     form.append('height', String(dimensions.height));
     form.append('frames', String(frames));
     form.append('fps', String(fps));
-    form.append('steps', '20');
-    form.append('guidance', '6');
+    form.append('steps', '1');
+    form.append('guidance', '7.5');
     form.append('seed', String(Math.floor(Math.random() * 1_000_000_000)));
     form.append(
       'negative_prompt',

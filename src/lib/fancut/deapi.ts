@@ -88,12 +88,12 @@ export function deapiVideoModel() {
 
 export function deapiVideoDimensions(aspectRatio: AspectRatio) {
   return aspectRatio === '16:9'
-    ? { width: 1024, height: 576 }
-    : { width: 576, height: 1024 };
+    ? { width: 768, height: 512 }
+    : { width: 512, height: 768 };
 }
 
 export function deapiVideoFps() {
-  return 16;
+  return 30;
 }
 
 export function deapiVideoFrames(durationSec: 3 | 5) {
