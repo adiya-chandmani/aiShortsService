@@ -106,7 +106,6 @@ export function StudioShell({
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 {topRight}
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-sky-500 ring-1 ring-slate-200 dark:ring-white/10" />
               </div>
             </div>
           </header>
@@ -126,4 +125,3 @@ export function StudioShell({
     </div>
   );
 }
-
