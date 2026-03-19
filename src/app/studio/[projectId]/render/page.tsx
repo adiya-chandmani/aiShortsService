@@ -16,9 +16,6 @@ export default function RenderPage() {
   const cuts = getCuts(projectId).slice().sort((a, b) => a.order - b.order);
   const render = state.rendersByProject[projectId];
 
-  const [bgmOn, setBgmOn] = useState(true);
-  const [subtitleTemplate, setSubtitleTemplate] = useState<'none' | 'basic'>('basic');
-  const [motionTypeDefault, setMotionTypeDefault] = useState<MotionType>('zoom_in');
   const [isRendering, setIsRendering] = useState(false);
 
   const allVideosPresent = useMemo(
@@ -39,6 +36,13 @@ export default function RenderPage() {
     );
   }
 
+  const totalDurationSec = cuts.reduce((sum, cut) => sum + (cut.durationSec ?? 0), 0);
+  const aspectRatioLabel = project.aspectRatio ?? '9:16';
+  const resolutionLabel = project.resolution ?? '1080p';
+  const motionTypeDefault: MotionType = 'zoom_in';
+  const bgmOn = false;
+  const subtitleTemplate: 'none' | 'basic' = 'none';
+
   const handleRender = async () => {
     setIsRendering(true);
     try {
@@ -50,157 +54,199 @@ export default function RenderPage() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-50 transition-theme dark:bg-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-              <span>✨</span> 최종 편집/결과
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <header className="mb-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <span aria-hidden="true">✨</span> 최종 결과
+              </div>
+              <h1 className="mt-2 truncate text-xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                선택한 컷 영상을 병합해 최종 MP4를 생성합니다.
+              </p>
+              <div className="mt-3">
+                <WorkflowStepper projectId={projectId} />
+              </div>
             </div>
-            <h1 className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{project.title}</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Gemini 컷 영상을 이어 붙여 최종 mp4를 생성합니다.
-            </p>
-            <div className="mt-4">
-              <WorkflowStepper projectId={projectId} />
+
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/studio/${projectId}/videos`}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                ← 영상으로
+              </Link>
+              <button
+                type="button"
+                disabled={!allVideosPresent || isRendering}
+                onClick={() => void handleRender()}
+                className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
+              >
+                {isRendering ? '렌더 중…' : render?.outputObjectUrl ? '다시 렌더' : '렌더 생성'}
+              </button>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/studio/${projectId}/videos`}
-              className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              ← 영상으로
-            </Link>
-            <button
-              type="button"
-              disabled={!allVideosPresent || isRendering}
-              onClick={() => void handleRender()}
-              className="rounded-xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
-            >
-              {isRendering ? '렌더 중...' : '최종 렌더 생성'}
-            </button>
           </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-        <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200/50 dark:bg-slate-800 dark:ring-slate-700/50 lg:col-span-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">기본 편집 옵션</h2>
-            <div className="mt-4 space-y-4">
-              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <div>
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">배경음악</div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400">Gemini-only MVP에서는 별도 오디오 합성을 적용하지 않습니다.</div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setBgmOn((v) => !v)}
-                    className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                      bgmOn
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                    }`}
-                  >
-                    {bgmOn ? 'ON' : 'OFF'}
-                  </button>
-                </div>
+        <div className="grid gap-5 lg:grid-cols-12">
+          {/* Left: output summary + future features */}
+          <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200/50 dark:bg-slate-800 dark:ring-slate-700/50 lg:col-span-4">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">출력 정보</h2>
+            <div className="mt-3 grid gap-2">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
+                <span className="text-slate-600 dark:text-slate-400">컷 수</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{cuts.length}개</span>
               </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">자막 템플릿</div>
-                <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">현재는 컷 병합 중심 MVP라 자막은 후속 구현 항목입니다.</div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {[
-                    { v: 'basic' as const, label: '기본' },
-                    { v: 'none' as const, label: '없음' },
-                  ].map((t) => (
-                    <button
-                      key={t.v}
-                      type="button"
-                      onClick={() => setSubtitleTemplate(t.v)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
-                        subtitleTemplate === t.v
-                          ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-100'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
+                <span className="text-slate-600 dark:text-slate-400">예상 길이</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{totalDurationSec}초</span>
               </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">트랜지션/모션(데모)</div>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                  해커톤 MVP를 위해 단일 모션으로 렌더링합니다.
-                </p>
-                <select
-                  value={motionTypeDefault}
-                  onChange={(e) => setMotionTypeDefault(e.target.value as MotionType)}
-                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                >
-                  <option value="zoom_in">줌인</option>
-                  <option value="static">정지</option>
-                  <option value="pan_left">팬(좌)</option>
-                  <option value="pan_right">팬(우)</option>
-                </select>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
+                <span className="text-slate-600 dark:text-slate-400">비율</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{aspectRatioLabel}</span>
               </div>
-
-              <div className="rounded-xl bg-amber-50 p-4 text-xs text-amber-900 ring-1 ring-amber-200/60 dark:bg-amber-900/20 dark:text-amber-100 dark:ring-amber-700/40">
-                <p className="font-semibold">다운로드 형식</p>
-                <p className="mt-1 opacity-90">
-                  최종 결과물은 <strong>mp4</strong>로 내려받습니다.
-                </p>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
+                <span className="text-slate-600 dark:text-slate-400">해상도</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{resolutionLabel}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-slate-900">
+                <span className="text-slate-600 dark:text-slate-400">포맷</span>
+                <span className="font-semibold text-slate-900 dark:text-white">MP4</span>
               </div>
             </div>
-          </section>
 
-        <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200/50 dark:bg-slate-800 dark:ring-slate-700/50 lg:col-span-3">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">미리보기</h2>
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
-                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">썸네일</div>
-                <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={render?.thumbnailDataUrl ?? state.imagesByCut[cuts[0]?.cutId ?? '']?.candidates?.[0]?.imageDataUrl ?? ''}
-                    alt=""
-                    className="aspect-video w-full bg-slate-200 object-cover dark:bg-slate-700"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
-                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">최종 결과</div>
-                <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60">
-                  {render?.outputObjectUrl ? (
-                    <video src={render.outputObjectUrl} controls className="aspect-[9/16] w-full bg-black object-cover" />
-                  ) : (
-                    <div className="flex aspect-[9/16] items-center justify-center bg-slate-200 text-sm text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                      렌더를 생성하면 여기에 표시됩니다
+            <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-700">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">추가 편집(준비 중)</h3>
+              <div className="mt-3 grid gap-2">
+                {[
+                  {
+                    title: '배경음악(BGM)',
+                    desc: '현재 MVP에서는 오디오 합성을 지원하지 않습니다.',
+                  },
+                  {
+                    title: '자막/캡션',
+                    desc: '현재 MVP에서는 자막 템플릿을 지원하지 않습니다.',
+                  },
+                  {
+                    title: '트랜지션/템포',
+                    desc: '현재 MVP에서는 컷 병합 중심으로 렌더합니다.',
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-3 opacity-80 dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-white">{item.title}</div>
+                        <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">{item.desc}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        준비 중
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {render?.outputObjectUrl && (
-                <a
-                  href={render.outputObjectUrl}
-                  download={`${project.title.replaceAll(' ', '-')}.mp4`}
-                  className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
-                >
-                  MP4 다운로드
-                </a>
-              )}
               <Link
                 href="/studio/new"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                새 프로젝트 만들기
+                새 프로젝트
               </Link>
+            </div>
+          </section>
+
+          {/* Right: big final result + small thumbnail */}
+          <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200/50 dark:bg-slate-800 dark:ring-slate-700/50 lg:col-span-8">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">최종 결과</h2>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">렌더가 완료되면 바로 재생/다운로드할 수 있어요.</p>
+              </div>
+              {render?.createdAt && (
+                <div className="text-xs text-slate-500 dark:text-slate-400">생성: {new Date(render.createdAt).toLocaleString()}</div>
+              )}
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-12">
+              <div className="lg:col-span-9">
+                <div className="overflow-hidden rounded-lg ring-1 ring-slate-200/60 dark:ring-slate-700/60">
+                  <div className="relative bg-[radial-gradient(1200px_circle_at_30%_0%,rgba(14,165,233,0.18),transparent_45%),radial-gradient(900px_circle_at_70%_10%,rgba(16,185,129,0.16),transparent_45%),linear-gradient(180deg,rgba(2,6,23,0.78),rgba(2,6,23,0.92))] p-4">
+                    <div className="mx-auto w-full max-w-[420px]">
+                      <div className="overflow-hidden rounded-lg bg-black ring-1 ring-white/10">
+                        {render?.outputObjectUrl ? (
+                          <video
+                            src={render.outputObjectUrl}
+                            controls
+                            className="aspect-[9/16] w-full bg-black object-cover"
+                          />
+                        ) : (
+                          <div className="flex aspect-[9/16] items-center justify-center bg-black/60 px-6 text-center text-sm text-slate-200">
+                            {allVideosPresent ? (
+                              <div>
+                                <div className="font-semibold">렌더 준비 완료</div>
+                                <div className="mt-1 text-xs text-slate-300">오른쪽 상단의 “렌더 생성”을 눌러 최종 결과를 만들어요.</div>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="font-semibold">아직 컷 영상이 부족해요</div>
+                                <div className="mt-1 text-xs text-slate-300">이전 단계에서 모든 컷 영상을 생성해 주세요.</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {render?.outputObjectUrl && (
+                    <a
+                      href={render.outputObjectUrl}
+                      download={`${project.title.replaceAll(' ', '-')}.mp4`}
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+                    >
+                      MP4 다운로드
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    disabled={!allVideosPresent || isRendering}
+                    onClick={() => void handleRender()}
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    {isRendering ? '렌더 중…' : '다시 렌더'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-3">
+                <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">썸네일</div>
+                    <span className="rounded-full bg-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      보조 정보
+                    </span>
+                  </div>
+                  <div className="mt-3 overflow-hidden rounded-lg ring-1 ring-slate-200/60 dark:ring-slate-700/60">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={render?.thumbnailDataUrl ?? state.imagesByCut[cuts[0]?.cutId ?? '']?.candidates?.[0]?.imageDataUrl ?? ''}
+                      alt=""
+                      className="aspect-video w-full bg-slate-200 object-cover dark:bg-slate-700"
+                    />
+                  </div>
+                  <div className="mt-3 text-xs text-slate-600 dark:text-slate-400">
+                    첫 컷 이미지를 기반으로 생성됩니다.
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
