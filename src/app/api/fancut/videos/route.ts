@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import {
-  dataUrlToBase64,
-  togetherJson,
-  togetherVideoDimensions,
-  togetherVideoFallbackModel,
-  togetherVideoFps,
-  togetherVideoModel,
-  togetherVideoSeconds,
-  TogetherRequestError,
-  type TogetherVideoResponse,
-} from '@/lib/fancut/together';
+  dataUrlToUpload,
+  deapiJson,
+  deapiVideoDimensions,
+  deapiVideoFps,
+  deapiVideoFrames,
+  deapiVideoModel,
+  DeapiRequestError,
+  type DeapiQueueResponse,
+} from '@/lib/fancut/deapi';
 import { buildVideoPrompt } from '@/lib/fancut/prompts';
 import type { FanCutCut, FanCutProject, MotionType } from '@/types/fancut';
 
@@ -27,74 +26,57 @@ type CreateVideoRequest = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateVideoRequest;
-    const frameImages: Array<Record<string, unknown>> = [
-      {
-        frame: 0,
-        input_image: dataUrlToBase64(body.imageDataUrl),
-      },
-    ];
+    const model = deapiVideoModel();
+    const dimensions = deapiVideoDimensions(body.project.aspectRatio);
+    const frames = deapiVideoFrames(body.durationSec);
+    const fps = deapiVideoFps();
+
+    const form = new FormData();
+    const firstFrame = dataUrlToUpload(body.imageDataUrl, 'first-frame');
+    form.append('first_frame_image', firstFrame.blob, firstFrame.filename);
+    form.append('prompt', buildVideoPrompt({
+      project: body.project,
+      cut: body.cut,
+      motionType: body.motionType,
+      durationSec: body.durationSec,
+    }));
+    form.append('model', model);
+    form.append('width', String(dimensions.width));
+    form.append('height', String(dimensions.height));
+    form.append('frames', String(frames));
+    form.append('fps', String(fps));
+    form.append('steps', '20');
+    form.append('guidance', '6');
+    form.append('seed', String(Math.floor(Math.random() * 1_000_000_000)));
+    form.append(
+      'negative_prompt',
+      'blurry, low detail, duplicate limbs, extra fingers, poster, comic panels, text, watermark, logo, deformed anatomy'
+    );
 
     if (body.endImageDataUrl) {
-      frameImages.push({
-        frame: 'last',
-        input_image: dataUrlToBase64(body.endImageDataUrl),
-      });
+      const lastFrame = dataUrlToUpload(body.endImageDataUrl, 'last-frame');
+      form.append('last_frame_image', lastFrame.blob, lastFrame.filename);
     }
 
-    const createVideo = (model: string) => {
-      const dimensions = togetherVideoDimensions(model, body.project.aspectRatio);
-      const seconds = togetherVideoSeconds(model, body.durationSec);
-      const fps = togetherVideoFps(model);
+    const created = await deapiJson<DeapiQueueResponse>('/img2video', {
+      method: 'POST',
+      body: form,
+    });
 
-      return {
-        model,
-        prompt: buildVideoPrompt({
-          project: body.project,
-          cut: body.cut,
-          motionType: body.motionType,
-          durationSec: body.durationSec,
-        }),
-        width: dimensions.width,
-        height: dimensions.height,
-        seconds,
-        steps: 16,
-        ...(fps ? { fps } : {}),
-        frame_images: frameImages,
-      };
-    };
-
-    const requestedModel = togetherVideoModel();
-    const fallbackModel = togetherVideoFallbackModel(requestedModel);
-
-    let created: TogetherVideoResponse;
-    let usedModel = requestedModel;
-
-    try {
-      created = await togetherJson<TogetherVideoResponse>('/videos', {
-        method: 'POST',
-        body: JSON.stringify(createVideo(requestedModel)),
-      });
-    } catch (error) {
-      if (!(error instanceof TogetherRequestError) || error.status !== 404 || !fallbackModel) {
-        throw error;
-      }
-
-      usedModel = fallbackModel;
-      created = await togetherJson<TogetherVideoResponse>('/videos', {
-        method: 'POST',
-        body: JSON.stringify(createVideo(fallbackModel)),
-      });
+    const requestId = created.data?.request_id;
+    if (!requestId) {
+      throw new DeapiRequestError('deAPI에서 request_id를 반환하지 않았습니다.', 502);
     }
 
     return NextResponse.json({
-      id: created.id,
-      status: created.status,
-      progress: created.status === 'completed' ? 100 : 0,
-      model: created.model || usedModel,
-      seconds: created.seconds ?? togetherVideoSeconds(usedModel, body.durationSec),
+      id: requestId,
+      status: 'queued',
+      progress: 0,
+      model,
+      seconds: String(body.durationSec),
     });
   } catch (error) {
-    const status = error instanceof TogetherRequestError ? error.status : 500;
+    const status = error instanceof DeapiRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '영상 생성에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }

@@ -2,7 +2,12 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { trimAndNormalizeClip, withTempDir } from '@/lib/fancut/ffmpeg';
-import { togetherJson, TogetherRequestError, type TogetherVideoResponse } from '@/lib/fancut/together';
+import {
+  deapiJson,
+  deapiResultUrl,
+  DeapiRequestError,
+  type DeapiStatusPayload,
+} from '@/lib/fancut/deapi';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
 export const runtime = 'nodejs';
@@ -17,12 +22,12 @@ export async function GET(
     const durationSec = Number(url.searchParams.get('durationSec') ?? '0');
     const size = url.searchParams.get('size') as VideoSize | null;
 
-    const video = await togetherJson<TogetherVideoResponse>(`/videos/${videoId}`, {
+    const payload = await deapiJson<DeapiStatusPayload>(`/request-status/${videoId}`, {
       method: 'GET',
     });
-    const videoUri = video.outputs?.video_url;
+    const videoUri = deapiResultUrl(payload);
     if (!videoUri) {
-      throw new TogetherRequestError('Together 영상 다운로드 URL을 찾지 못했습니다.', 502);
+      throw new DeapiRequestError('deAPI 영상 다운로드 URL을 찾지 못했습니다.', 502);
     }
 
     const upstream = await fetch(videoUri, {
@@ -30,7 +35,7 @@ export async function GET(
       cache: 'no-store',
     });
     if (!upstream.ok) {
-      throw new TogetherRequestError(`Together 영상 다운로드에 실패했습니다. (${upstream.status})`, upstream.status);
+      throw new DeapiRequestError(`deAPI 영상 다운로드에 실패했습니다. (${upstream.status})`, upstream.status);
     }
     const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
 
@@ -64,7 +69,7 @@ export async function GET(
       });
     });
   } catch (error) {
-    const status = error instanceof TogetherRequestError ? error.status : 500;
+    const status = error instanceof DeapiRequestError ? error.status : 500;
     const message = error instanceof Error ? error.message : '영상 다운로드에 실패했습니다.';
     return NextResponse.json({ error: message }, { status });
   }

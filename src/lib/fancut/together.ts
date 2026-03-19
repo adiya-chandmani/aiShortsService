@@ -1,7 +1,7 @@
 import type { AspectRatio } from '@/types/fancut';
 
 function normalizeTogetherBaseUrl(raw?: string) {
-  const base = (raw ?? 'https://api.together.xyz/v1').trim().replace(/\/+$/, '');
+  const base = (raw ?? 'https://api.together.ai/v1').trim().replace(/\/+$/, '');
   return base.endsWith('/v1') ? base : `${base}/v1`;
 }
 
