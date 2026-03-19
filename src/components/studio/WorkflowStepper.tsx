@@ -27,7 +27,7 @@ export function WorkflowStepper({ projectId }: { projectId: string }) {
           <Link
             key={s.key}
             href={href}
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
+            className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
               active
                 ? 'bg-slate-900 text-white ring-slate-900/10 dark:bg-white dark:text-slate-900 dark:ring-white/20'
                 : done
@@ -35,15 +35,6 @@ export function WorkflowStepper({ projectId }: { projectId: string }) {
                   : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800'
             }`}
           >
-            <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-              active
-                ? 'bg-white/15 text-white dark:bg-slate-900 dark:text-white'
-                : done
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-            }`}>
-              {done ? '✓' : idx + 1}
-            </span>
             {s.label}
           </Link>
         );
@@ -51,4 +42,3 @@ export function WorkflowStepper({ projectId }: { projectId: string }) {
     </div>
   );
 }
-
