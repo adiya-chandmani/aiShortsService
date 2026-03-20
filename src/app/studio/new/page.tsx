@@ -668,18 +668,18 @@ export default function StudioNewPage() {
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 top-[18%] flex justify-center px-4">
-          <div className="w-full max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 ring-1 ring-white shadow-sm backdrop-blur-md dark:bg-white/12 dark:text-white/80 dark:ring-white/20">
+          <div className="w-full max-w-3xl rounded-[30px] bg-black/46 px-6 py-7 text-center ring-1 ring-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-[22px] sm:px-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
               Gen Space
             </div>
-            <div className="mt-4 text-2xl font-semibold tracking-tight text-white [text-shadow:0_8px_30px_rgba(0,0,0,0.55)] sm:text-3xl">
+            <div className="mt-4 text-2xl font-semibold tracking-tight text-white/92 sm:text-3xl">
               캐릭터 무드 보드로 바로 시작
             </div>
-            <div className="mt-2 text-sm text-white/95 [text-shadow:0_8px_24px_rgba(0,0,0,0.5)]">
+            <div className="mt-2 text-sm text-white/58">
               인기 캐릭터 이미지 레퍼런스를 보며 톤과 에너지를 빠르게 잡고, 바로 숏폼 플롯으로 연결하세요.
             </div>
 
-            <div className="mt-6 text-xs text-white/85 [text-shadow:0_8px_20px_rgba(0,0,0,0.45)]">
+            <div className="mt-6 text-xs text-white/42">
               아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.
             </div>
           </div>
