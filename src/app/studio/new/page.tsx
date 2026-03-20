@@ -33,8 +33,10 @@ type JikanCharacter = {
 const CHARACTER_FEED_URLS = [
   'https://api.jikan.moe/v4/top/characters?limit=25&page=1',
   'https://api.jikan.moe/v4/top/characters?limit=25&page=2',
+  'https://api.jikan.moe/v4/top/characters?limit=25&page=3',
+  'https://api.jikan.moe/v4/top/characters?limit=25&page=4',
 ] as const;
-const BACKDROP_TILE_COUNT = 42;
+const BACKDROP_TILE_COUNT = 120;
 const BACKDROP_LAYOUT_CLASSES = [
   'row-span-2',
   '',
@@ -104,7 +106,6 @@ function CharacterBackdropTile({
           <div className="h-full w-full animate-pulse bg-gradient-to-br from-slate-300 via-slate-200 to-slate-100 dark:from-white/15 dark:via-white/8 dark:to-white/5" />
         )}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/12 to-transparent" />
     </div>
   );
 }
@@ -380,7 +381,7 @@ export default function StudioNewPage() {
           }))
           .filter((item) => item.imageUrl)
           .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
-          .slice(0, 50);
+          .slice(0, 100);
 
         if (nextCharacters.length === 0) {
           throw new Error('character feed request returned no images');
@@ -650,9 +651,8 @@ export default function StudioNewPage() {
         </div>
       }
     >
-      <div className="relative min-h-[calc(100vh-11rem)] overflow-hidden bg-[#0d0d12]">
-        <div className="absolute inset-0">
-          <div className="grid h-full grid-flow-dense auto-rows-[86px] grid-cols-3 gap-2 p-2 sm:auto-rows-[100px] sm:grid-cols-4 sm:gap-3 sm:p-3 lg:auto-rows-[108px] lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
+      <div className="relative px-2 pb-36 pt-2 sm:px-3 sm:pb-40 sm:pt-3">
+        <div className="grid grid-flow-dense auto-rows-[82px] grid-cols-3 gap-2 sm:auto-rows-[96px] sm:grid-cols-4 sm:gap-3 lg:auto-rows-[104px] lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
           {backdropCharacters.map((character, idx) => {
             const layoutClass = BACKDROP_LAYOUT_CLASSES[idx % BACKDROP_LAYOUT_CLASSES.length];
 
@@ -665,25 +665,23 @@ export default function StudioNewPage() {
               </div>
             );
           })}
-          </div>
         </div>
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04),transparent_36%)]" />
-        <div className="absolute inset-0 bg-black/14" />
-        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/82 to-transparent dark:from-[#0b0b0d] dark:via-[rgba(11,11,13,0.84)]" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0d0d12] via-[rgba(13,13,18,0.72)] to-transparent" />
-
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="mx-4 w-full max-w-3xl rounded-[30px] bg-black/46 px-6 py-7 text-center ring-1 ring-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-[22px] sm:px-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
+        <div className="pointer-events-none absolute inset-x-0 top-[18%] flex justify-center px-4">
+          <div className="w-full max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 ring-1 ring-white shadow-sm backdrop-blur-md dark:bg-white/12 dark:text-white/80 dark:ring-white/20">
               Gen Space
             </div>
-            <div className="mt-4 text-2xl font-semibold tracking-tight text-white/92 sm:text-3xl">캐릭터 무드 보드로 바로 시작</div>
-            <div className="mt-2 text-sm text-white/58">
+            <div className="mt-4 text-2xl font-semibold tracking-tight text-white [text-shadow:0_8px_30px_rgba(0,0,0,0.55)] sm:text-3xl">
+              캐릭터 무드 보드로 바로 시작
+            </div>
+            <div className="mt-2 text-sm text-white/95 [text-shadow:0_8px_24px_rgba(0,0,0,0.5)]">
               인기 캐릭터 이미지 레퍼런스를 보며 톤과 에너지를 빠르게 잡고, 바로 숏폼 플롯으로 연결하세요.
             </div>
 
-            <div className="mt-6 text-xs text-white/42">아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.</div>
+            <div className="mt-6 text-xs text-white/85 [text-shadow:0_8px_20px_rgba(0,0,0,0.45)]">
+              아래 프롬프트에 아이디어를 입력하면 바로 플롯 생성으로 이어집니다.
+            </div>
           </div>
         </div>
       </div>
