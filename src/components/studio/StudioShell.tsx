@@ -50,12 +50,14 @@ export function StudioShell({
   children,
   topRight,
   bottomBar,
+  contentClassName,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   topRight?: React.ReactNode;
   bottomBar?: React.ReactNode;
+  contentClassName?: string;
 }) {
   const pathname = usePathname();
 
@@ -111,7 +113,7 @@ export function StudioShell({
           </header>
 
           <div className="relative flex-1">
-            <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">{children}</div>
+            <div className={contentClassName ?? 'mx-auto w-full max-w-7xl px-4 py-8 sm:px-6'}>{children}</div>
             {bottomBar && (
               <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20">
                 <div className="pointer-events-auto mx-auto w-full max-w-5xl px-4 pb-5 sm:px-6">

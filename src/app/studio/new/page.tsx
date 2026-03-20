@@ -30,25 +30,56 @@ type JikanCharacter = {
   };
 };
 
-const CHARACTER_FEED_URL = 'https://api.jikan.moe/v4/top/characters?limit=24';
-const BACKDROP_TILE_COUNT = 18;
+const CHARACTER_FEED_URLS = [
+  'https://api.jikan.moe/v4/top/characters?limit=25&page=1',
+  'https://api.jikan.moe/v4/top/characters?limit=25&page=2',
+] as const;
+const BACKDROP_TILE_COUNT = 42;
 const BACKDROP_LAYOUT_CLASSES = [
-  'lg:row-span-2',
+  'row-span-2',
   '',
   '',
-  'lg:row-span-2',
+  'row-span-2',
   '',
-  'lg:row-span-2',
-  '',
-  '',
-  'lg:row-span-2',
+  'col-span-2 row-span-2',
   '',
   '',
+  'row-span-2',
   '',
-  'lg:row-span-2',
+  '',
+  'col-span-2',
+  'row-span-2',
   '',
   '',
-  'lg:row-span-2',
+  'row-span-2',
+  '',
+  'col-span-2 row-span-2',
+  '',
+  'row-span-2',
+  '',
+  '',
+  'row-span-2',
+  'col-span-2',
+  '',
+  'row-span-2',
+  '',
+  '',
+  'col-span-2 row-span-2',
+  '',
+  'row-span-2',
+  '',
+  '',
+  'row-span-2',
+  '',
+  'col-span-2',
+  'row-span-2',
+  '',
+  '',
+  'row-span-2',
+  '',
+  'col-span-2 row-span-2',
+  '',
+  'row-span-2',
   '',
   '',
 ] as const;
@@ -59,7 +90,7 @@ function CharacterBackdropTile({
   character?: CharacterPhoto;
 }) {
   return (
-    <div className="relative h-full min-h-[120px] overflow-hidden rounded-[24px] ring-1 ring-black/5 dark:ring-white/10">
+    <div className="relative h-full min-h-[88px] overflow-hidden rounded-[22px] ring-1 ring-black/5 dark:ring-white/10">
       <div className="absolute inset-0">
         {character ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -327,23 +358,34 @@ export default function StudioNewPage() {
 
     const loadPopularCharacterPhotos = async () => {
       try {
-        const response = await fetch(CHARACTER_FEED_URL, {
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(`character feed request failed: ${response.status}`);
+        const responses = await Promise.allSettled(
+          CHARACTER_FEED_URLS.map(async (url) => {
+            const response = await fetch(url, {
+              signal: controller.signal,
+            });
+            if (!response.ok) {
+              throw new Error(`character feed request failed: ${response.status}`);
+            }
+            return (await response.json()) as { data?: JikanCharacter[] };
+          }),
+        );
+
+        const nextCharacters = responses
+          .filter((result): result is PromiseFulfilledResult<{ data?: JikanCharacter[] }> => result.status === 'fulfilled')
+          .flatMap((result) => result.value.data ?? [])
+          .map((item) => ({
+            id: String(item.mal_id),
+            name: item.name,
+            imageUrl: item.images?.webp?.image_url ?? item.images?.jpg?.image_url ?? '',
+          }))
+          .filter((item) => item.imageUrl)
+          .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
+          .slice(0, 50);
+
+        if (nextCharacters.length === 0) {
+          throw new Error('character feed request returned no images');
         }
-        const payload = (await response.json()) as { data?: JikanCharacter[] };
-        const nextCharacters = Array.isArray(payload.data)
-          ? payload.data
-              .map((item) => ({
-                id: String(item.mal_id),
-                name: item.name,
-                imageUrl: item.images?.webp?.image_url ?? item.images?.jpg?.image_url ?? '',
-              }))
-              .filter((item) => item.imageUrl)
-              .slice(0, 24)
-          : [];
+
         setCharacterPhotos(nextCharacters);
       } catch (error) {
         if (!controller.signal.aborted) {
@@ -408,6 +450,7 @@ export default function StudioNewPage() {
     <StudioShell
       title="Projects"
       subtitle="All Projects   ·   Shared Projects"
+      contentClassName="w-full px-0 py-0"
       bottomBar={
         <PromptBar
           value={ideaText}
@@ -607,26 +650,31 @@ export default function StudioNewPage() {
         </div>
       }
     >
-      <div className="relative -mx-4 overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="grid grid-flow-dense auto-rows-[104px] gap-3 sm:grid-cols-3 sm:auto-rows-[124px] lg:grid-cols-6 lg:auto-rows-[120px]">
+      <div className="relative min-h-[calc(100vh-11rem)] overflow-hidden bg-[#0d0d12]">
+        <div className="absolute inset-0">
+          <div className="grid h-full grid-flow-dense auto-rows-[86px] grid-cols-3 gap-2 p-2 sm:auto-rows-[100px] sm:grid-cols-4 sm:gap-3 sm:p-3 lg:auto-rows-[108px] lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
           {backdropCharacters.map((character, idx) => {
-            const responsiveVisibility =
-              idx >= 12 ? 'hidden lg:block' : idx >= 8 ? 'hidden sm:block' : '';
             const layoutClass = BACKDROP_LAYOUT_CLASSES[idx % BACKDROP_LAYOUT_CLASSES.length];
 
             return (
               <div
                 key={`${character?.id ?? 'placeholder'}-${idx}`}
-                className={`${responsiveVisibility} ${layoutClass}`.trim()}
+                className={layoutClass}
               >
                 <CharacterBackdropTile character={character} />
               </div>
             );
           })}
+          </div>
         </div>
 
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04),transparent_36%)]" />
+        <div className="absolute inset-0 bg-black/14" />
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white via-white/82 to-transparent dark:from-[#0b0b0d] dark:via-[rgba(11,11,13,0.84)]" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0d0d12] via-[rgba(13,13,18,0.72)] to-transparent" />
+
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-full max-w-3xl rounded-[30px] bg-black/42 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur-[22px] sm:px-8">
+          <div className="mx-4 w-full max-w-3xl rounded-[30px] bg-black/46 px-6 py-7 text-center ring-1 ring-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur-[22px] sm:px-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
               Gen Space
             </div>
