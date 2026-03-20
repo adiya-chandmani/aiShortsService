@@ -72,7 +72,7 @@ export function StudioShell({
     <div className="min-h-screen bg-white text-slate-900 dark:bg-[#0b0b0d] dark:text-white">
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <aside className="hidden w-[240px] shrink-0 border-r border-slate-200 bg-white px-4 py-5 dark:border-white/10 dark:bg-[#0b0b0d] lg:block">
+        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-[240px] shrink-0 self-start border-r border-slate-200 bg-white px-4 py-5 dark:border-white/10 dark:bg-[#0b0b0d] lg:block">
           <nav className="mt-2 space-y-6">
             {SIDEBAR_SECTIONS.map((sec, i) => (
               <div key={i}>
