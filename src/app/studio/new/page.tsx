@@ -30,19 +30,37 @@ type JikanCharacter = {
   };
 };
 
-const CHARACTER_FEED_URL = 'https://api.jikan.moe/v4/top/characters?limit=18';
-const BACKDROP_PLACEHOLDER_COUNT = 10;
+const CHARACTER_FEED_URL = 'https://api.jikan.moe/v4/top/characters?limit=24';
+const BACKDROP_TILE_COUNT = 18;
+const BACKDROP_LAYOUT_CLASSES = [
+  'lg:row-span-2',
+  '',
+  '',
+  'lg:row-span-2',
+  '',
+  'lg:row-span-2',
+  '',
+  '',
+  'lg:row-span-2',
+  '',
+  '',
+  '',
+  'lg:row-span-2',
+  '',
+  '',
+  'lg:row-span-2',
+  '',
+  '',
+] as const;
 
 function CharacterBackdropTile({
   character,
-  tall = false,
 }: {
   character?: CharacterPhoto;
-  tall?: boolean;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[24px] ring-1 ring-white/10">
-      <div className={tall ? 'aspect-[4/5] w-full' : 'aspect-[4/3] w-full'}>
+    <div className="relative h-full min-h-[120px] overflow-hidden rounded-[24px] ring-1 ring-black/5 dark:ring-white/10">
+      <div className="absolute inset-0">
         {character ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -324,7 +342,7 @@ export default function StudioNewPage() {
                 imageUrl: item.images?.webp?.image_url ?? item.images?.jpg?.image_url ?? '',
               }))
               .filter((item) => item.imageUrl)
-              .slice(0, 18)
+              .slice(0, 24)
           : [];
         setCharacterPhotos(nextCharacters);
       } catch (error) {
@@ -340,10 +358,15 @@ export default function StudioNewPage() {
     return () => controller.abort();
   }, []);
 
-  const backdropCharacters = useMemo(
-    () => characterPhotos.slice(0, BACKDROP_PLACEHOLDER_COUNT),
-    [characterPhotos],
-  );
+  const backdropCharacters = useMemo(() => {
+    if (characterPhotos.length === 0) {
+      return Array.from({ length: BACKDROP_TILE_COUNT }, () => undefined);
+    }
+
+    return Array.from({ length: BACKDROP_TILE_COUNT }, (_, index) => {
+      return characterPhotos[index % characterPhotos.length];
+    });
+  }, [characterPhotos]);
 
   const handleReferenceUpload = async (file: File) => {
     const reader = new FileReader();
@@ -584,23 +607,26 @@ export default function StudioNewPage() {
         </div>
       }
     >
-      <div className="relative">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {(backdropCharacters.length
-            ? backdropCharacters
-            : Array.from({ length: BACKDROP_PLACEHOLDER_COUNT }, () => undefined)
-          ).map((character, idx) => {
-            const tall = idx % 5 === 0;
+      <div className="relative -mx-4 overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="grid grid-flow-dense auto-rows-[104px] gap-3 sm:grid-cols-3 sm:auto-rows-[124px] lg:grid-cols-6 lg:auto-rows-[120px]">
+          {backdropCharacters.map((character, idx) => {
+            const responsiveVisibility =
+              idx >= 12 ? 'hidden lg:block' : idx >= 8 ? 'hidden sm:block' : '';
+            const layoutClass = BACKDROP_LAYOUT_CLASSES[idx % BACKDROP_LAYOUT_CLASSES.length];
+
             return (
-              <div key={character?.id ?? `placeholder-${idx}`} className={tall ? 'lg:row-span-2' : ''}>
-                <CharacterBackdropTile character={character} tall={tall} />
+              <div
+                key={`${character?.id ?? 'placeholder'}-${idx}`}
+                className={`${responsiveVisibility} ${layoutClass}`.trim()}
+              >
+                <CharacterBackdropTile character={character} />
               </div>
             );
           })}
         </div>
 
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-full max-w-3xl rounded-[30px] bg-black/38 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur-[22px] sm:px-8">
+          <div className="w-full max-w-3xl rounded-[30px] bg-black/42 px-6 py-7 text-center ring-1 ring-white/10 backdrop-blur-[22px] sm:px-8">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/65 ring-1 ring-white/10">
               Gen Space
             </div>
