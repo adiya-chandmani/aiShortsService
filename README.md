@@ -16,6 +16,7 @@ Gemini API와 Together AI를 조합해 아이디어 입력부터 플롯, 컷 이
 - 프로젝트 단위 `style bible`과 `character bible`을 먼저 만들고, 이후 이미지/영상 생성에 재사용합니다.
 - 컷 이미지는 Together AI의 `FLUX` 계열 이미지 모델을 사용합니다.
 - 기본 모델은 `black-forest-labs/FLUX.1-schnell`이며, `TOGETHER_REFERENCE_IMAGE_MODEL`을 추가하면 reference-capable 모델로 올릴 수 있습니다.
+- 업로드한 레퍼런스 이미지는 현재 첫 컷 이미지 생성의 기준으로 우선 활용되며, 이후 컷은 `character bible`, `style bible`, 이전 컷 문맥, 컷별 프롬프트로 일관성을 관리합니다.
 - 영상은 `deAPI`의 `Ltxv_13B_0_9_8_Distilled_FP8` 모델로 생성합니다.
 - Gemini 정책상 직접 생성이 어려운 고유 IP/실존인물은 inspired-by 형태로 완화되도록 설계했습니다.
 - 렌더 결과 페이지에서 제목/설명/해시태그를 자동 생성하고, YouTube OAuth가 연결된 채널로 바로 업로드할 수 있습니다.
@@ -86,6 +87,7 @@ npm run dev
 - Together 이미지 모델은 계정 크레딧이 있어야 호출할 수 있고, 이미지 모델 접근은 Build Tier에 따라 제한될 수 있습니다.
 - 기본 모델인 `FLUX.1-schnell`은 실제 크레딧을 사용하는 모델로 보는 편이 안전합니다.
 - 레퍼런스 이미지를 실제로 활용하려면 `TOGETHER_REFERENCE_IMAGE_MODEL`에 `kontext` 계열처럼 image-guided를 지원하는 모델을 넣는 편이 좋습니다.
+- 현재 일관성 유지는 `character/style bible + prompt lock + neighboring-cut context` 중심이며, 모든 컷에 동일 reference image를 직접 고정하는 방식은 아닙니다.
 - 플롯 전 IP 리서치는 Gemini의 Google Search grounding을 사용하므로, 검색 도구 사용분이 추가 과금될 수 있습니다.
 - YouTube 업로드는 Google Cloud Console에서 OAuth 웹 클라이언트와 `YOUTUBE_REDIRECT_URI`를 정확히 등록해야 합니다.
 - Google의 검증 상태에 따라 업로드된 영상이 기본적으로 비공개 처리될 수 있습니다.

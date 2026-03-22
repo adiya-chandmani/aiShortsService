@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 /* ============================================
-   DESIGN DIRECTION: Climate/Environmental
-   - Aesthetic: Modern, Clean, Data-Driven
+   DESIGN DIRECTION: Creator Studio
+   - Aesthetic: Modern, cinematic, tool-like
    - Display Font: Space Grotesk
    - Body Font: Plus Jakarta Sans
-   - Colors: Sky Blue (water/climate), Orange (heat), Emerald (eco)
+   - Colors: Sky Blue, Orange, Emerald
    - Motion: Staggered fade-ins, smooth transitions
    ============================================ */
 
@@ -70,7 +70,7 @@ function HeroSection() {
             >
               복잡한 프롬프트 없이도{' '}
               <span className="font-semibold text-slate-900 dark:text-white">플롯 → 이미지 → 영상</span>까지
-              한 번에 이어집니다. 컷 단위 수정/재생성으로 일관된 캐릭터·스타일을 유지하세요.
+              한 번에 이어집니다. 캐릭터 바이블, 스타일 규칙, 컷 단위 수정/재생성으로 일관성을 관리하세요.
             </p>
 
             {/* CTA Buttons - Element 4 */}
@@ -184,7 +184,7 @@ const BENEFITS = [
   {
     icon: '🖼️',
     title: 'AI 이미지 생성',
-    description: '컷별 이미지 후보를 만들고, 선택/재생성으로 일관성을 맞춥니다.',
+    description: '컷별 이미지 후보를 만들고, 캐릭터/스타일 가이드를 바탕으로 톤을 맞춥니다.',
     color: 'from-orange-500 to-red-500',
     bgColor: 'bg-orange-50 dark:bg-orange-900/30',
   },
@@ -198,7 +198,7 @@ const BENEFITS = [
   {
     icon: '✨',
     title: '자동 병합/내보내기',
-    description: '기본 트랜지션·BGM·자막 템플릿으로 결과물을 빠르게 내보냅니다.',
+    description: '컷 영상을 mp4로 병합하고 다운로드하거나 업로드 단계로 넘깁니다.',
     color: 'from-purple-500 to-pink-500',
     bgColor: 'bg-purple-50 dark:bg-purple-900/30',
   },
@@ -298,24 +298,24 @@ function StatsSection() {
 // ============================================
 const FAQS = [
   {
-    question: '어떤 데이터를 사용하나요?',
-    answer: '데모 버전에서는 실제 생성 모델 대신, 플로우와 UX를 검증하기 위한 플레이스홀더 생성 로직을 사용합니다.',
+    question: '어떤 모델과 도구를 사용하나요?',
+    answer: '플롯은 Gemini, 이미지는 Together AI, 컷 영상은 deAPI, 최종 병합은 ffmpeg로 처리합니다.',
   },
   {
-    question: '생성 결과는 얼마나 정확한가요?',
-    answer: '본 서비스는 “제작 흐름”을 단순화하는 데 집중합니다. 실제 생성 품질은 연결하는 모델/파이프라인에 따라 달라집니다.',
+    question: '컷 간 일관성은 어떻게 맞추나요?',
+    answer: '프로젝트 단위 character bible과 style bible을 만들고, 컷별 프롬프트와 재생성, 인접 컷 문맥을 함께 사용합니다. 선택한 레퍼런스 이미지는 현재 첫 컷 기준으로 우선 활용되며 완전한 동일 얼굴 lock을 보장하는 방식은 아닙니다.',
   },
   {
-    question: '무료로 사용할 수 있나요?',
-    answer: '네, 모든 기능을 무료로 이용할 수 있습니다. 별도 회원가입 없이 바로 시뮬레이션을 시작할 수 있습니다.',
+    question: '사용하려면 무엇이 필요한가요?',
+    answer: 'Node.js 환경과 Gemini, Together, deAPI 키가 필요합니다. 이미지와 영상 생성은 각 제공사의 사용량과 크레딧 정책을 따릅니다.',
   },
   {
     question: '결과를 저장하거나 공유할 수 있나요?',
-    answer: '컷 영상과 최종 결과물을 다운로드할 수 있습니다. (데모에서는 WebM 다운로드 제공)',
+    answer: '컷별 영상과 최종 결과물을 mp4로 다운로드할 수 있고, YouTube Shorts 업로드와 TikTok mock 업로드를 지원합니다.',
   },
   {
     question: '모바일에서도 사용할 수 있나요?',
-    answer: '네, 반응형 디자인으로 모바일과 태블릿에서도 최적화된 경험을 제공합니다.',
+    answer: '랜딩과 주요 화면은 반응형이지만, 실제 생성 작업과 업로드 검증은 데스크톱 환경이 더 안정적입니다.',
   },
 ];
 
@@ -399,8 +399,7 @@ function FinalCTASection() {
           시작해보세요
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-          회원가입 없이 바로 시작할 수 있습니다. 아이디어를 넣고, 컷을 고치고,
-          이미지와 영상을 생성해 15~30초 결과물을 내보내세요.
+          아이디어를 넣고, 컷을 고치고, 이미지와 영상을 생성해 15~30초 결과물을 내보내세요.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -421,13 +420,13 @@ function FinalCTASection() {
             <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            무료 이용
+            로컬 실행
           </div>
           <div className="flex items-center gap-2">
             <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            회원가입 불필요
+            MP4 다운로드
           </div>
           <div className="flex items-center gap-2">
             <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -517,4 +516,3 @@ export default function HomePage() {
     </div>
   );
 }
-

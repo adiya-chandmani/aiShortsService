@@ -605,7 +605,7 @@ export default function StudioNewPage() {
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 dark:text-white/70">레퍼런스 이미지(선택)</label>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-white/70">첫 컷 레퍼런스 이미지(선택)</label>
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
                   <input
                     type="file"
@@ -636,6 +636,7 @@ export default function StudioNewPage() {
                   <div className="font-semibold text-slate-900 dark:text-white/80">안내</div>
                   <ul className="mt-2 list-disc space-y-1 pl-4">
                     <li>Gemini 정책에 따라 고유 IP/실존인물은 inspired-by 형태로 완화될 수 있습니다.</li>
+                    <li>업로드한 레퍼런스 이미지는 현재 첫 컷 기준으로 우선 활용되고, 이후 컷은 character/style bible과 인접 컷 문맥으로 일관성을 관리합니다.</li>
                     <li>업로드 이미지는 저작권/초상권을 확인해주세요.</li>
                     <li>영상은 deAPI의 LTX-Video 13B 기준으로 생성되며, 현재는 9:16 / 16:9 중심으로 최적화되어 있습니다.</li>
                   </ul>
@@ -676,7 +677,7 @@ export default function StudioNewPage() {
               캐릭터 무드 보드로 바로 시작
             </div>
             <div className="mt-2 text-sm text-white/58">
-              인기 캐릭터 이미지 레퍼런스를 보며 톤과 에너지를 빠르게 잡고, 바로 숏폼 플롯으로 연결하세요.
+              무드 보드로 톤과 에너지를 빠르게 잡고, 필요하면 첫 컷 레퍼런스를 더해 바로 숏폼 플롯으로 연결하세요.
             </div>
 
             <div className="mt-6 text-xs text-white/42">

@@ -16,7 +16,7 @@ const FEATURES = [
   { name: '컷 단위 수정/순서 조정', icon: '🧩' },
   { name: '컷별 이미지 생성/선택/재생성', icon: '🖼️' },
   { name: '컷별 3~5초 영상 생성', icon: '🎞️' },
-  { name: '자동 병합/다운로드(데모)', icon: '✨' },
+  { name: 'mp4 병합/다운로드/업로드', icon: '✨' },
 ];
 
 export default function AboutPage() {
@@ -41,7 +41,7 @@ export default function AboutPage() {
             <p className="leading-relaxed text-gray-700 dark:text-gray-300">
               FanCut AI는 팬이 짧은 아이디어만 입력하면, AI가 <strong>플롯 기획 → 이미지 생성 → 영상 생성</strong>을
               한 서비스 안에서 이어서 <strong>15~30초 숏폼 결과물</strong>을 빠르게 완성해주는 제작 스튜디오입니다.
-              (현재 버전은 해커톤 MVP 데모를 위한 플레이스홀더 생성 로직을 포함합니다.)
+              현재 MVP는 Gemini, Together AI, deAPI, ffmpeg를 연결한 실제 생성 파이프라인 기준으로 동작합니다.
             </p>
           </section>
 
@@ -57,7 +57,7 @@ export default function AboutPage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-xl">🖼️</span>
-                <span><strong>AI 이미지 생성:</strong> 컷별 이미지 후보 생성, 선택/재생성</span>
+                <span><strong>AI 이미지 생성:</strong> 컷별 이미지 후보 생성, 선택/재생성, 캐릭터/스타일 가이드 재사용</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-xl">🎞️</span>
@@ -65,9 +65,20 @@ export default function AboutPage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-xl">✨</span>
-                <span><strong>자동 병합/내보내기:</strong> 기본 트랜지션·BGM·자막 템플릿으로 결과물 다운로드</span>
+                <span><strong>자동 병합/내보내기:</strong> mp4 병합, 다운로드, YouTube 업로드, TikTok mock 업로드</span>
               </li>
             </ul>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
+              <span>🎯</span> 일관성 유지 방식
+            </h2>
+            <p className="leading-relaxed text-gray-700 dark:text-gray-300">
+              현재 MVP는 프로젝트 단위 <strong>character bible</strong>, <strong>style bible</strong>, 컷별 프롬프트,
+              인접 컷 문맥을 함께 사용해 일관성을 관리합니다. 선택한 레퍼런스 이미지는 현재 첫 컷 기준으로 우선 활용되며,
+              모든 컷에서 동일 얼굴을 강하게 고정하는 방식까지 구현된 상태는 아닙니다.
+            </p>
           </section>
 
           {/* 제작 플로우 */}
@@ -105,4 +116,3 @@ export default function AboutPage() {
     </div>
   );
 }
-
