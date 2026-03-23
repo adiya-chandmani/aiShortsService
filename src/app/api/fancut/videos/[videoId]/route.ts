@@ -7,18 +7,20 @@ import {
   DeapiRequestError,
   type DeapiStatusPayload,
 } from '@/lib/fancut/deapi';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 
 export const runtime = 'nodejs';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ videoId: string }> }
 ) {
   try {
     const { videoId } = await context.params;
+    const providerKeys = readProviderKeyOverrides(request);
     const payload = await deapiJson<DeapiStatusPayload>(`/request-status/${videoId}`, {
       method: 'GET',
-    });
+    }, 0, providerKeys.deapiApiKey);
     const downloadUri = deapiResultUrl(payload);
     const status = normalizeDeapiVideoStatus(payload.data?.status, Boolean(downloadUri));
 

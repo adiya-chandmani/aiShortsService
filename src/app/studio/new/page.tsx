@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
 import type { CharacterConsistency, StylePreset, TargetDuration } from '@/types/fancut';
 import { useFanCutStudio } from '@/contexts/FanCutStudioContext';
+import { useProviderSettings } from '@/contexts/ProviderSettingsContext';
 import { StudioShell } from '@/components/studio/StudioShell';
 
 const STYLE_PRESETS: Array<{ value: StylePreset; label: string; desc: string }> = [
@@ -338,6 +339,7 @@ function getSubmitErrorMeta(message: string | null) {
 export default function StudioNewPage() {
   const router = useRouter();
   const { createProjectAndPlot } = useFanCutStudio();
+  const { providerHeaders } = useProviderSettings();
 
   const [title, setTitle] = useState('untitled project');
   const [ideaText, setIdeaText] = useState('');
@@ -465,7 +467,10 @@ export default function StudioNewPage() {
     try {
       const response = await fetch('/api/fancut/ip-research', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: providerHeaders({
+          headers: { 'Content-Type': 'application/json' },
+          includeGemini: true,
+        }),
         body: JSON.stringify(ipResearchPayload),
       });
 

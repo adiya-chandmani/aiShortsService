@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GeminiRequestError, geminiJson } from '@/lib/fancut/gemini';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import { buildIpResearchPrompt } from '@/lib/fancut/prompts';
 import type { CharacterConsistency } from '@/types/fancut';
 
@@ -190,7 +191,11 @@ function buildCharacterPreviewCharacters(data: ParsedIpResearch): CharacterConsi
   }));
 }
 
-async function researchIpContext(model: string, body: Required<Pick<IpResearchRequest, 'title' | 'ideaText'>> & IpResearchRequest) {
+async function researchIpContext(
+  model: string,
+  body: Required<Pick<IpResearchRequest, 'title' | 'ideaText'>> & IpResearchRequest,
+  apiKeyOverride?: string
+) {
   const completion = await geminiJson<ResearchCompletionResponse>(`/models/${model}:generateContent`, {
     method: 'POST',
     body: JSON.stringify({
@@ -215,7 +220,7 @@ async function researchIpContext(model: string, body: Required<Pick<IpResearchRe
         temperature: 0.1,
       },
     }),
-  });
+  }, 0, apiKeyOverride);
 
   const note = extractGeminiText(completion, 'IP 리서치 응답이 비어 있습니다.').trim();
   if (!note || note.toUpperCase() === 'NONE') {
@@ -228,6 +233,7 @@ async function researchIpContext(model: string, body: Required<Pick<IpResearchRe
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as IpResearchRequest;
+    const providerKeys = readProviderKeyOverrides(request);
     const ideaText = body.ideaText?.trim() ?? '';
     const ipTag = body.ipTag?.trim() ?? '';
 
@@ -242,7 +248,7 @@ export async function POST(request: Request) {
       genre: body.genre?.trim() || undefined,
       tone: body.tone?.trim() || undefined,
       ipTag: ipTag || undefined,
-    });
+    }, providerKeys.geminiApiKey);
     const parsed = parseIpResearchData(note);
 
     return NextResponse.json({

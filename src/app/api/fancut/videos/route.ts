@@ -9,6 +9,7 @@ import {
   DeapiRequestError,
   type DeapiQueueResponse,
 } from '@/lib/fancut/deapi';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import { buildVideoPrompt } from '@/lib/fancut/prompts';
 import type { FanCutCut, FanCutProject, MotionType } from '@/types/fancut';
 
@@ -26,6 +27,7 @@ type CreateVideoRequest = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateVideoRequest;
+    const providerKeys = readProviderKeyOverrides(request);
     const model = deapiVideoModel();
     const dimensions = deapiVideoDimensions(body.project.aspectRatio);
     const frames = deapiVideoFrames(body.durationSec);
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
     const created = await deapiJson<DeapiQueueResponse>('/img2video', {
       method: 'POST',
       body: form,
-    });
+    }, 0, providerKeys.deapiApiKey);
 
     const requestId = created.data?.request_id;
     if (!requestId) {

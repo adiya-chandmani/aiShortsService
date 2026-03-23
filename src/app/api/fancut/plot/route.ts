@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createId } from '@/lib/fancut/id';
 import { defaultCutCount } from '@/lib/fancut/plot';
 import { GeminiRequestError, geminiJson } from '@/lib/fancut/gemini';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import {
   buildImagePrompt,
   buildIpResearchPrompt,
@@ -70,6 +71,7 @@ async function requestPlotText(params: {
   userText: string;
   responseMimeType?: 'application/json';
   temperature: number;
+  apiKeyOverride?: string;
 }) {
   const completion = await geminiJson<PlotCompletionResponse>(`/models/${params.model}:generateContent`, {
     method: 'POST',
@@ -88,7 +90,7 @@ async function requestPlotText(params: {
         ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
       },
     }),
-  });
+  }, 0, params.apiKeyOverride);
 
   return extractGeminiText(
     completion,
@@ -96,7 +98,7 @@ async function requestPlotText(params: {
   );
 }
 
-async function researchIpContext(model: string, body: PlotRequest) {
+async function researchIpContext(model: string, body: PlotRequest, apiKeyOverride?: string) {
   try {
     const completion = await geminiJson<PlotCompletionResponse>(`/models/${model}:generateContent`, {
       method: 'POST',
@@ -122,7 +124,7 @@ async function researchIpContext(model: string, body: PlotRequest) {
           temperature: 0.1,
         },
       }),
-    });
+    }, 0, apiKeyOverride);
 
     const note = extractGeminiText(completion, 'IP 리서치 응답이 비어 있습니다.').trim();
     if (!note || note.toUpperCase() === 'NONE') {
@@ -530,10 +532,11 @@ function normalizeCuts(value: unknown, body: PlotRequest, names: string[]) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as PlotRequest;
+    const providerKeys = readProviderKeyOverrides(request);
     const model = process.env.GEMINI_PLOT_MODEL ?? 'gemini-2.5-flash';
     const researchModel = process.env.GEMINI_IP_RESEARCH_MODEL ?? 'gemini-2.5-flash-lite';
     const formatModel = process.env.GEMINI_PLOT_FORMAT_MODEL ?? 'gemini-2.5-flash-lite';
-    const ipResearch = parseIpResearchData(await researchIpContext(researchModel, body));
+    const ipResearch = parseIpResearchData(await researchIpContext(researchModel, body, providerKeys.geminiApiKey));
 
     const brief = await requestPlotText({
       model,
@@ -552,6 +555,7 @@ export async function POST(request: Request) {
         .filter(Boolean)
         .join('\n\n'),
       temperature: 0.85,
+      apiKeyOverride: providerKeys.geminiApiKey,
     });
 
     const rawContent = await requestPlotText({
@@ -562,6 +566,7 @@ export async function POST(request: Request) {
       }),
       responseMimeType: 'application/json',
       temperature: 0.35,
+      apiKeyOverride: providerKeys.geminiApiKey,
     });
 
     const parsed = parsePlotDraft(rawContent);

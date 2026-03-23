@@ -8,6 +8,7 @@ import {
   DeapiRequestError,
   type DeapiStatusPayload,
 } from '@/lib/fancut/deapi';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
 export const runtime = 'nodejs';
@@ -23,6 +24,7 @@ type RenderRequest = {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RenderRequest;
+    const providerKeys = readProviderKeyOverrides(request);
 
     if (!body.clips?.length) {
       throw new DeapiRequestError('병합할 컷 영상이 없습니다.', 400);
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
         const clip = body.clips[index];
         const payload = await deapiJson<DeapiStatusPayload>(`/request-status/${clip.videoId}`, {
           method: 'GET',
-        });
+        }, 0, providerKeys.deapiApiKey);
         const videoUri = deapiResultUrl(payload);
         if (!videoUri) {
           throw new DeapiRequestError(`CUT ${index + 1}의 deAPI 영상 URL을 찾지 못했습니다.`, 502);

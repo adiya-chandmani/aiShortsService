@@ -8,6 +8,7 @@ import {
   DeapiRequestError,
   type DeapiStatusPayload,
 } from '@/lib/fancut/deapi';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
 export const runtime = 'nodejs';
@@ -45,13 +46,14 @@ export async function GET(
 ) {
   try {
     const { videoId } = await context.params;
+    const providerKeys = readProviderKeyOverrides(request);
     const url = new URL(request.url);
     const durationSec = Number(url.searchParams.get('durationSec') ?? '0');
     const size = url.searchParams.get('size') as VideoSize | null;
 
     const payload = await deapiJson<DeapiStatusPayload>(`/request-status/${videoId}`, {
       method: 'GET',
-    });
+    }, 0, providerKeys.deapiApiKey);
     const videoUri = deapiResultUrl(payload);
     if (!videoUri) {
       throw new DeapiRequestError('deAPI 영상 다운로드 URL을 찾지 못했습니다.', 502);

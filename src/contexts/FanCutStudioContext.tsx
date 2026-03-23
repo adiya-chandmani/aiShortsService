@@ -17,6 +17,7 @@ import type {
 import { createId } from '@/lib/fancut/id';
 import { createThumbnailDataUrl, optimizeVideoReferenceDataUrl } from '@/lib/fancut/video';
 import { normalizeAspectRatio, normalizeResolutionPreset, videoSizeForProject } from '@/lib/fancut/prompts';
+import { useProviderSettings } from '@/contexts/ProviderSettingsContext';
 
 type State = {
   projects: Record<string, FanCutProject>;
@@ -531,6 +532,7 @@ type Ctx = {
 const FanCutStudioContext = createContext<Ctx | null>(null);
 
 export function FanCutStudioProvider({ children }: { children: React.ReactNode }) {
+  const { providerHeaders } = useProviderSettings();
   const [state, dispatch] = useReducer(reducer, initialState);
   const [isHydrated, setIsHydrated] = useState(false);
   const imageRequestControllersRef = useRef<Record<string, AbortController>>({});
@@ -585,7 +587,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
       const response = await fetch('/api/fancut/plot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: providerHeaders({
+          headers: { 'Content-Type': 'application/json' },
+          includeGemini: true,
+        }),
         body: JSON.stringify(baseProject),
       });
 
@@ -632,7 +637,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
       const response = await fetch('/api/fancut/plot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: providerHeaders({
+          headers: { 'Content-Type': 'application/json' },
+          includeGemini: true,
+        }),
         body: JSON.stringify(project),
       });
 
@@ -838,7 +846,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
       const createResponse = await fetch('/api/fancut/videos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: providerHeaders({
+          headers: { 'Content-Type': 'application/json' },
+          includeDeapi: true,
+        }),
         body: JSON.stringify(payload),
       });
       let video = await parseJsonOrThrow<{
@@ -856,6 +867,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
         try {
           const pollResponse = await fetch(`/api/fancut/videos/${video.id}`, {
             cache: 'no-store',
+            headers: providerHeaders({ includeDeapi: true }),
           });
           video = await parseJsonOrThrow<typeof video>(pollResponse);
           transientPollFailures = 0;
@@ -882,7 +894,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
         try {
           const downloadResponse = await fetch(
             `/api/fancut/videos/${video.id}/content?durationSec=${durationSec}&size=${videoSizeForProject(project)}`,
-            { cache: 'no-store' }
+            {
+              cache: 'no-store',
+              headers: providerHeaders({ includeDeapi: true }),
+            }
           );
           blob = await parseBlobOrThrow(downloadResponse);
         } catch (error) {
@@ -936,7 +951,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
       const response = await fetch('/api/fancut/render', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: providerHeaders({
+          headers: { 'Content-Type': 'application/json' },
+          includeDeapi: true,
+        }),
         body: JSON.stringify({
           clips,
           size: videoSizeForProject(project),
@@ -985,7 +1003,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       generateVideoForCut,
       renderFinalVideo,
     };
-  }, [isHydrated, state]);
+  }, [isHydrated, providerHeaders, state]);
 
   return <FanCutStudioContext.Provider value={api}>{children}</FanCutStudioContext.Provider>;
 }

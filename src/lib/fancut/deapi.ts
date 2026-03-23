@@ -24,8 +24,8 @@ export class DeapiRequestError extends Error {
   }
 }
 
-function getApiKey() {
-  const apiKey = process.env.DEAPI_API_KEY?.trim();
+function getApiKey(overrideApiKey?: string) {
+  const apiKey = overrideApiKey?.trim() || process.env.DEAPI_API_KEY?.trim();
   if (!apiKey) {
     throw new DeapiRequestError(
       'DEAPI_API_KEY가 설정되지 않았습니다. 루트 .env.local에 DEAPI_API_KEY=... 를 추가한 뒤 서버를 다시 시작하세요.',
@@ -35,9 +35,9 @@ function getApiKey() {
   return apiKey;
 }
 
-function makeHeaders(extra?: HeadersInit) {
+function makeHeaders(extra?: HeadersInit, overrideApiKey?: string) {
   const headers = new Headers(extra);
-  headers.set('Authorization', `Bearer ${getApiKey()}`);
+  headers.set('Authorization', `Bearer ${getApiKey(overrideApiKey)}`);
   headers.set('Accept', 'application/json');
   return headers;
 }
@@ -90,16 +90,16 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function deapiJson<T>(path: string, init: RequestInit, attempt = 0): Promise<T> {
+export async function deapiJson<T>(path: string, init: RequestInit, attempt = 0, overrideApiKey?: string): Promise<T> {
   const response = await fetch(`${DEAPI_BASE_URL}${path}`, {
     ...init,
-    headers: makeHeaders(init.headers),
+    headers: makeHeaders(init.headers, overrideApiKey),
     cache: 'no-store',
   });
 
   if ((response.status === 429 || response.status === 503 || response.status === 504) && attempt < MAX_RETRIES) {
     await sleep(getRetryDelayMs(response, attempt));
-    return deapiJson<T>(path, init, attempt + 1);
+    return deapiJson<T>(path, init, attempt + 1, overrideApiKey);
   }
 
   if (!response.ok) {
@@ -120,7 +120,7 @@ export function deapiVideoDimensions(aspectRatio: AspectRatio) {
 }
 
 export function deapiVideoFps() {
-  return 16;
+  return 30;
 }
 
 export function deapiVideoFrames(durationSec: 3 | 5) {

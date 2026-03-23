@@ -12,6 +12,7 @@ const SIDEBAR_SECTIONS: Array<{
     items: [
       { href: '/studio/new', label: 'Gen space', icon: <span className="text-sm">✨</span> },
       { href: '/studio', label: 'Projects', icon: <span className="text-sm">📁</span> },
+      { href: '/studio/settings', label: 'Settings', icon: <span className="text-sm">⚙️</span> },
     ],
   },
 ];
@@ -107,6 +108,16 @@ export function StudioShell({
                 {subtitle && <div className="mt-1 text-xs text-slate-500 dark:text-white/50">{subtitle}</div>}
               </div>
               <div className="flex shrink-0 items-center gap-3">
+                <Link
+                  href="/studio/settings"
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    activeMatcher('/studio/settings')
+                      ? 'bg-slate-900 text-white dark:bg-white/10 dark:text-white'
+                      : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10'
+                  }`}
+                >
+                  설정
+                </Link>
                 {topRight}
               </div>
             </div>

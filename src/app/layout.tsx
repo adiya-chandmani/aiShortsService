@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { ProviderSettingsProvider } from "../contexts/ProviderSettingsContext";
 import { FanCutStudioProvider } from "../contexts/FanCutStudioContext";
 import { AppShell } from "../components/layout/AppShell";
 import "./globals.css";
@@ -86,9 +87,11 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`${notoSansKR.variable} antialiased`}>
         <ThemeProvider>
-          <FanCutStudioProvider>
-            <AppShell>{children}</AppShell>
-          </FanCutStudioProvider>
+          <ProviderSettingsProvider>
+            <FanCutStudioProvider>
+              <AppShell>{children}</AppShell>
+            </FanCutStudioProvider>
+          </ProviderSettingsProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -11,8 +11,8 @@ export class GeminiRequestError extends Error {
   }
 }
 
-function getApiKey() {
-  const apiKey = process.env.GEMINI_API_KEY;
+function getApiKey(overrideApiKey?: string) {
+  const apiKey = overrideApiKey?.trim() || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new GeminiRequestError(
       'GEMINI_API_KEY가 설정되지 않았습니다. app/.env.local에 GEMINI_API_KEY=... 를 추가한 뒤 개발 서버를 다시 시작하세요.',
@@ -22,9 +22,9 @@ function getApiKey() {
   return apiKey;
 }
 
-function makeHeaders(extra?: HeadersInit) {
+function makeHeaders(extra?: HeadersInit, overrideApiKey?: string) {
   const headers = new Headers(extra);
-  headers.set('x-goog-api-key', getApiKey());
+  headers.set('x-goog-api-key', getApiKey(overrideApiKey));
   return headers;
 }
 
@@ -61,7 +61,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function geminiJson<T>(path: string, init: RequestInit, attempt = 0): Promise<T> {
+export async function geminiJson<T>(path: string, init: RequestInit, attempt = 0, overrideApiKey?: string): Promise<T> {
   const headers = new Headers(init.headers);
   if (!headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -69,7 +69,7 @@ export async function geminiJson<T>(path: string, init: RequestInit, attempt = 0
 
   const response = await fetch(`${GEMINI_BASE_URL}${path}`, {
     ...init,
-    headers: makeHeaders(headers),
+    headers: makeHeaders(headers, overrideApiKey),
     cache: 'no-store',
   });
 
@@ -78,7 +78,7 @@ export async function geminiJson<T>(path: string, init: RequestInit, attempt = 0
 
     if (attempt < MAX_RETRIES) {
       await sleep(getRetryDelayMs(response, attempt, message));
-      return geminiJson<T>(path, init, attempt + 1);
+      return geminiJson<T>(path, init, attempt + 1, overrideApiKey);
     }
 
     throw new GeminiRequestError(message, response.status);
@@ -91,16 +91,16 @@ export async function geminiJson<T>(path: string, init: RequestInit, attempt = 0
   return (await response.json()) as T;
 }
 
-export async function geminiBinaryUrl(url: string, init?: RequestInit, attempt = 0): Promise<Response> {
+export async function geminiBinaryUrl(url: string, init?: RequestInit, attempt = 0, overrideApiKey?: string): Promise<Response> {
   const response = await fetch(url, {
     ...init,
-    headers: makeHeaders(init?.headers),
+    headers: makeHeaders(init?.headers, overrideApiKey),
     cache: 'no-store',
   });
 
   if (response.status === 429 && attempt < MAX_RETRIES) {
     await sleep(getRetryDelayMs(response, attempt));
-    return geminiBinaryUrl(url, init, attempt + 1);
+    return geminiBinaryUrl(url, init, attempt + 1, overrideApiKey);
   }
 
   if (!response.ok) {
