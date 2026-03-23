@@ -240,11 +240,41 @@ function splitResearchValues(raw: string) {
     .filter(Boolean);
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function parseDescriptorMap(raw: string, names: string[]) {
   const map: Record<string, string> = {};
-  if (!raw.trim()) return map;
+  const normalizedRaw = raw.replace(/\s+/g, ' ').trim();
+  if (!normalizedRaw) return map;
 
-  const entries = raw
+  if (names.length > 0) {
+    const sortedNames = [...names].sort((left, right) => right.length - left.length);
+    const pattern = new RegExp(`(${sortedNames.map(escapeRegExp).join('|')})\\s*:`, 'g');
+    const matches = [...normalizedRaw.matchAll(pattern)];
+
+    for (const [index, match] of matches.entries()) {
+      const matchedName = match[1]?.trim();
+      if (!matchedName || typeof match.index !== 'number') continue;
+
+      const start = match.index + match[0].length;
+      const end = matches[index + 1]?.index ?? normalizedRaw.length;
+      const value = normalizedRaw.slice(start, end).replace(/^[;,\s]+|[;,\s]+$/g, '').trim();
+      if (!value) continue;
+
+      const canonicalName = names.find((name) => name === matchedName || name.includes(matchedName) || matchedName.includes(name));
+      if (canonicalName) {
+        map[canonicalName] = value;
+      }
+    }
+
+    if (Object.keys(map).length > 0) {
+      return map;
+    }
+  }
+
+  const entries = normalizedRaw
     .split(/\s*;\s*|\n+/)
     .map((entry) => entry.trim())
     .filter(Boolean);
@@ -339,6 +369,38 @@ function looksLikeGenericWardrobe(value: string) {
   return /(대표 의상|이야기 전체에서 유지되는 대표 의상|톤에 맞는 대표 의상|일관된 의상|기본 복장)/.test(value);
 }
 
+function shouldPreserveCanonicalDesign(body: Pick<PlotRequest, 'ipTag'>, names: string[]) {
+  return Boolean(body.ipTag?.trim()) || names.length > 0;
+}
+
+function fallbackAppearanceText(name: string, body: PlotRequest, preserveCanonicalDesign: boolean) {
+  if (preserveCanonicalDesign) {
+    return `${name}의 원작 기준 대표 외형을 유지한 모습: 헤어스타일, 머리색, 눈매, 얼굴 인상, 체형, 대표 액세서리`;
+  }
+
+  return `${body.stylePreset} 스타일에 맞는 선명한 인상과 일관된 얼굴 비율`;
+}
+
+function fallbackWardrobeText(name: string, body: PlotRequest, preserveCanonicalDesign: boolean) {
+  if (preserveCanonicalDesign) {
+    return `${name}의 원작 기준 대표 의상 또는 유니폼, 실루엣, 메인 컬러 조합 유지`;
+  }
+
+  return body.tone ? `${body.tone} 톤에 맞는 대표 의상` : '이야기 전체에서 유지되는 대표 의상';
+}
+
+function fallbackMustKeep(preserveCanonicalDesign: boolean) {
+  return preserveCanonicalDesign
+    ? ['원작 헤어스타일 유지', '얼굴 인상 유지', '대표 의상 실루엣 유지', '메인 컬러 유지']
+    : ['헤어스타일 유지', '의상 실루엣 유지', '메인 컬러 유지'];
+}
+
+function defaultPolicyAdaptationNote(body: Pick<PlotRequest, 'ipTag'>, names: string[]) {
+  return shouldPreserveCanonicalDesign(body, names)
+    ? '원작 고유명사와 시각 시그니처를 유지하되 컷 연출과 구도는 숏폼에 맞게 새롭게 구성'
+    : '없음';
+}
+
 function fallbackCharacter(
   body: PlotRequest,
   names: string[],
@@ -346,13 +408,14 @@ function fallbackCharacter(
   wardrobeByName: Record<string, string>
 ): ProjectConsistency['characterBible'][number] {
   const name = names[0] ?? '주인공';
+  const preserveCanonicalDesign = shouldPreserveCanonicalDesign(body, names);
   return {
     name,
     role: body.genre ? `${body.genre} 장르의 중심 인물` : '이야기의 중심 인물',
-    appearance: appearanceByName[name] ?? `${body.stylePreset} 스타일에 맞는 선명한 인상과 일관된 얼굴 비율`,
-    wardrobe: wardrobeByName[name] ?? (body.tone ? `${body.tone} 톤에 맞는 대표 의상` : '이야기 전체에서 유지되는 대표 의상'),
+    appearance: appearanceByName[name] ?? fallbackAppearanceText(name, body, preserveCanonicalDesign),
+    wardrobe: wardrobeByName[name] ?? fallbackWardrobeText(name, body, preserveCanonicalDesign),
     colorPalette: '핵심 포인트 컬러 2~3개를 고정',
-    mustKeep: ['헤어스타일 유지', '의상 실루엣 유지', '메인 컬러 유지'],
+    mustKeep: fallbackMustKeep(preserveCanonicalDesign),
   };
 }
 
@@ -382,7 +445,7 @@ function fallbackCut(order: number, body: PlotRequest, names: string[]): PlotCut
     mood: body.tone ?? '몰입감 있는 분위기',
     story_point: stage,
     duration_sec: 3,
-    policy_adaptation_note: body.ipTag ? '직접적인 고유 IP 표현 대신 분위기와 장르만 유지' : '없음',
+    policy_adaptation_note: defaultPolicyAdaptationNote(body, names),
   };
 }
 
@@ -393,6 +456,7 @@ function normalizeCharacterBible(
   appearanceByName: Record<string, string>,
   wardrobeByName: Record<string, string>
 ) {
+  const preserveCanonicalDesign = shouldPreserveCanonicalDesign(body, names);
   const normalized = Array.isArray(value)
     ? value
         .slice(0, 5)
@@ -407,13 +471,13 @@ function normalizeCharacterBible(
             appearance:
               appearance && !looksLikeGenericAppearance(appearance)
                 ? appearance
-                : appearanceByName[name] ?? `${body.stylePreset} 스타일에 맞는 일관된 외형`,
+                : appearanceByName[name] ?? fallbackAppearanceText(name, body, preserveCanonicalDesign),
             wardrobe:
               wardrobe && !looksLikeGenericWardrobe(wardrobe)
                 ? wardrobe
-                : wardrobeByName[name] ?? '전 컷에서 유지되는 대표 의상',
+                : wardrobeByName[name] ?? fallbackWardrobeText(name, body, preserveCanonicalDesign),
             colorPalette: normalizeString(character.color_palette, '대표 포인트 컬러 2~3개'),
-            mustKeep: normalizeStringArray(character.must_keep, ['헤어스타일 유지', '의상 실루엣 유지'], 6),
+            mustKeep: normalizeStringArray(character.must_keep, fallbackMustKeep(preserveCanonicalDesign), 6),
           };
         })
     : [];
@@ -437,7 +501,7 @@ function normalizeCuts(value: unknown, body: PlotRequest, names: string[]) {
       imagePrompt: normalizeString(cut.image_prompt, ''),
       videoPrompt: normalizeString(cut.video_prompt, ''),
       durationSec: normalizeDurationSec(cut.duration_sec),
-      policyAdaptationNote: normalizeString(cut.policy_adaptation_note, body.ipTag ? '직접 고유명사 대신 분위기만 유지' : '없음'),
+      policyAdaptationNote: normalizeString(cut.policy_adaptation_note, defaultPolicyAdaptationNote(body, names)),
     };
   });
 
@@ -456,7 +520,7 @@ function normalizeCuts(value: unknown, body: PlotRequest, names: string[]) {
       imagePrompt: '',
       videoPrompt: '',
       durationSec: normalizeDurationSec(fallback.duration_sec),
-      policyAdaptationNote: normalizeString(fallback.policy_adaptation_note, body.ipTag ? '직접 고유명사 대신 분위기만 유지' : '없음'),
+      policyAdaptationNote: normalizeString(fallback.policy_adaptation_note, defaultPolicyAdaptationNote(body, names)),
     });
   }
 
@@ -522,7 +586,7 @@ export async function POST(request: Request) {
     const projectPatch: Partial<FanCutProject> = {
       title: normalizeString(parsed.title, body.title),
       consistency,
-      policyAdaptationNote: normalizeString(parsed.policy_adaptation_note, body.ipTag ? '직접 고유명사 대신 분위기와 장르만 유지' : '없음'),
+      policyAdaptationNote: normalizeString(parsed.policy_adaptation_note, defaultPolicyAdaptationNote(body, ipResearch.characterNames)),
     };
 
     const projectForPrompts: FanCutProject = {

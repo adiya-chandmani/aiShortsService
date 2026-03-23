@@ -218,6 +218,17 @@ function strictCharacterAppearanceLock(project: FanCutProject, cut: FanCutCut) {
   ].join('\n');
 }
 
+function canonicalFictionalCharacterGuidance(project: FanCutProject, cut: FanCutCut) {
+  const relevantGuide = relevantCharacterBibleText(project, cut);
+  if (!relevantGuide) return '';
+
+  return [
+    'For known fictional characters, prioritize recognizability.',
+    'Preserve the canonical face impression, hair silhouette, signature costume design, accessories, and team or costume colors.',
+    'Do not genericize named characters into unrelated anime archetypes or substitute designs.',
+  ].join('\n');
+}
+
 export function buildImagePrompt(params: {
   project: FanCutProject;
   cut: FanCutCut;
@@ -241,7 +252,8 @@ export function buildImagePrompt(params: {
     `Variation note: candidate ${candidateIndex + 1} should slightly vary framing emphasis, micro-expression, or environmental detail while keeping the same character identity and style.`,
     'Deliver a polished single-frame key visual with strong subject clarity.',
     'Do not add text, logos, watermarks, subtitles, or split panels.',
-    'Avoid direct copyrighted character likenesses or real-person likenesses.',
+    canonicalFictionalCharacterGuidance(project, cut),
+    'Avoid direct real-person likenesses.',
   ].join('\n');
 }
 
@@ -358,6 +370,7 @@ export function buildTogetherImagePrompt(params: {
     `Relevant character look guide:\n${relevantCharacterBibleText(project, cut)}`,
     `Character bible:\n${characterBibleText(project)}`,
     strictCharacterAppearanceLock(project, cut),
+    canonicalFictionalCharacterGuidance(project, cut),
     continuityText,
     openingCutGuidance(cut),
     previousCutGuard,
@@ -434,7 +447,8 @@ export function buildVideoPrompt(params: {
     `Camera movement: ${motionText}.`,
     'Generate natural motion, subtle secondary movement, and a clean ending frame suitable for stitching with neighboring cuts.',
     'Avoid text overlays, abrupt morphing, identity drift, or major costume changes.',
-    'Avoid direct copyrighted character likenesses or real-person likenesses.',
+    canonicalFictionalCharacterGuidance(project, cut),
+    'Avoid direct real-person likenesses.',
   ].join('\n');
 }
 
