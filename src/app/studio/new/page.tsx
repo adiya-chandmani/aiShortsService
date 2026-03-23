@@ -119,25 +119,6 @@ function CharacterBackdropTile({
   );
 }
 
-function CharacterPreviewCard({ character }: { character: CharacterConsistency }) {
-  return (
-    <div className="rounded-2xl bg-white/80 p-4 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
-      <div className="text-sm font-semibold text-slate-900 dark:text-white/90">{character.name}</div>
-      <div className="mt-1 text-[11px] text-slate-500 dark:text-white/45">{character.role}</div>
-      <div className="mt-3 space-y-2 text-xs text-slate-700 dark:text-white/75">
-        <div>
-          <div className="font-semibold text-slate-900 dark:text-white/85">외형</div>
-          <div className="mt-1 leading-5">{character.appearance}</div>
-        </div>
-        <div>
-          <div className="font-semibold text-slate-900 dark:text-white/85">의상</div>
-          <div className="mt-1 leading-5">{character.wardrobe}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function PromptBar({
   value,
   onChange,
@@ -637,107 +618,84 @@ export default function StudioNewPage() {
           }
           basicSettings={
             <div className="rounded-2xl bg-slate-50/90 p-3 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-white/45">
-                    IP Character Search
-                  </div>
-                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-white/88">
-                    프로젝트 시작 전에 원작 캐릭터 외형 먼저 확인
-                  </div>
-                  <div className="mt-1 text-xs text-slate-600 dark:text-white/58">
-                    IP 태그나 메인 프롬프트를 기준으로 작품과 핵심 캐릭터를 검색해, 외형과 의상 시그니처를 생성 전에 미리 보여줍니다.
-                  </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="min-w-0 sm:w-28">
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-white/70">IP 태그</label>
                 </div>
-
+                <input
+                  value={ipTag}
+                  onChange={(e) => setIpTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleResearchIp();
+                    }
+                  }}
+                  className="min-w-0 flex-1 rounded-xl bg-white px-4 py-3 text-sm text-slate-900 ring-1 ring-slate-200 outline-none placeholder:text-slate-400 focus:ring-slate-300 dark:bg-[#101015] dark:text-white/90 dark:ring-white/10 dark:placeholder:text-white/35 dark:focus:ring-white/20"
+                  placeholder="예: 슬램덩크, 하이큐, 원피스"
+                />
                 <button
                   type="button"
                   onClick={() => void handleResearchIp()}
                   disabled={!canResearchIp || isResearchingIp}
-                  className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-900 px-4 text-xs font-semibold text-white shadow-lg shadow-slate-500/15 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-[#0b0b0d]"
+                  className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-[#0b0b0d]"
                 >
-                  {isResearchingIp ? '검색 중...' : '캐릭터 검색'}
+                  {isResearchingIp ? '검색 중...' : '검색'}
                 </button>
               </div>
 
-              <div className="mt-3 flex flex-col gap-3 xl:flex-row">
-                <div className="min-w-0 flex-1">
-                  <label className="text-[11px] font-semibold text-slate-600 dark:text-white/70">IP 태그(선택)</label>
-                  <input
-                    value={ipTag}
-                    onChange={(e) => setIpTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        void handleResearchIp();
-                      }
-                    }}
-                    className="mt-2 w-full rounded-xl bg-white px-4 py-3 text-sm text-slate-900 ring-1 ring-slate-200 outline-none placeholder:text-slate-400 focus:ring-slate-300 dark:bg-[#101015] dark:text-white/90 dark:ring-white/10 dark:placeholder:text-white/35 dark:focus:ring-white/20"
-                    placeholder="예: 슬램덩크, 하이큐, 원피스"
-                  />
-                </div>
-
-                <div className="xl:w-[280px]">
-                  <div className="text-[11px] font-semibold text-slate-600 dark:text-white/70">감지 기준</div>
-                  <div className="mt-2 rounded-xl bg-white px-4 py-3 text-xs leading-5 text-slate-600 ring-1 ring-slate-200 dark:bg-[#101015] dark:text-white/60 dark:ring-white/10">
-                    {trimmedIpTag
-                      ? `IP 태그 "${trimmedIpTag}"와 메인 아이디어를 함께 참고합니다.`
-                      : 'IP 태그가 비어 있으면 메인 프롬프트 문장만 보고 작품과 캐릭터를 추론합니다.'}
-                  </div>
-                </div>
+              <div className="mt-2 text-[11px] text-slate-500 dark:text-white/45">
+                {trimmedIpTag
+                  ? `현재 "${trimmedIpTag}" 기준으로 작품과 캐릭터를 찾습니다.`
+                  : '비워두면 메인 프롬프트 문장으로만 작품을 추론합니다.'}
               </div>
 
               {ipResearchError && (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100/90">
+                <div className="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100/90">
                   {ipResearchError}
                 </div>
               )}
 
               {ipResearch && (
-                <div className="mt-4 rounded-2xl bg-white/85 p-4 ring-1 ring-slate-200 dark:bg-[#0f1014]/85 dark:ring-white/10">
-                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-slate-900 dark:text-white/90">
+                <div className="mt-3 rounded-xl bg-white/85 px-3 py-3 ring-1 ring-slate-200 dark:bg-[#0f1014]/85 dark:ring-white/10">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-slate-900 dark:text-white/90">
                         {ipResearch.workTitle ?? ipResearch.originalTitle ?? '감지된 작품 정보'}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500 dark:text-white/45">
+                      <div className="mt-1 text-[11px] text-slate-500 dark:text-white/45">
                         {[
-                          ipResearch.originalTitle && ipResearch.originalTitle !== ipResearch.workTitle ? ipResearch.originalTitle : null,
                           ipResearch.media,
                           ipResearch.characterNames.length > 0 ? `${ipResearch.characterNames.length}명 감지` : null,
                         ]
                           .filter(Boolean)
-                          .join(' · ') || '고정된 작품명 없이 캐릭터 정보만 추론했습니다.'}
+                          .join(' · ') || '캐릭터 정보만 추론됨'}
                       </div>
                     </div>
 
                     {isIpResearchStale && (
-                      <div className="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/20">
-                        입력이 바뀌었습니다. 다시 검색해 최신 외형을 반영하세요.
+                      <div className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-100 dark:ring-amber-400/20">
+                        입력 변경됨
                       </div>
                     )}
                   </div>
 
                   {ipResearch.characters.length > 0 ? (
-                    <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                      {ipResearch.characters.map((character) => (
-                        <CharacterPreviewCard
+                    <div className="mt-3 max-h-40 space-y-2 overflow-y-auto pr-1 text-xs text-slate-700 dark:text-white/72">
+                      {ipResearch.characters.slice(0, 4).map((character) => (
+                        <div
                           key={`${character.name}-${character.role}`}
-                          character={character}
-                        />
+                          className="rounded-lg bg-slate-50 px-3 py-2 leading-5 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10"
+                        >
+                          <span className="font-semibold text-slate-900 dark:text-white/88">{character.name}</span>
+                          {`: ${character.appearance}`}
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-600 ring-1 ring-slate-200 dark:bg-white/5 dark:text-white/60 dark:ring-white/10">
-                      고정된 원작 캐릭터를 찾지 못했습니다. 그래도 프로젝트 생성은 가능하고, 필요하면 IP 태그를 더 구체적으로 적은 뒤 다시 검색할 수 있습니다.
+                    <div className="mt-3 text-xs text-slate-600 dark:text-white/58">
+                      고정된 원작 캐릭터를 찾지 못했습니다.
                     </div>
-                  )}
-
-                  {ipResearch.note && (
-                    <details className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600 ring-1 ring-slate-200 dark:bg-white/5 dark:text-white/60 dark:ring-white/10">
-                      <summary className="cursor-pointer font-semibold text-slate-800 dark:text-white/78">리서치 원문 보기</summary>
-                      <pre className="mt-3 whitespace-pre-wrap break-words font-sans leading-5">{ipResearch.note}</pre>
-                    </details>
                   )}
                 </div>
               )}
