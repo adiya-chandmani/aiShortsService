@@ -14,6 +14,7 @@ import type {
   TargetDuration,
   VideoAsset,
 } from '@/types/fancut';
+import { loadPersistedImagesByCut, persistImagesByCut } from '@/lib/fancut/browser-media-store';
 import { createId } from '@/lib/fancut/id';
 import { createThumbnailDataUrl, optimizeVideoReferenceDataUrl } from '@/lib/fancut/video';
 import { normalizeAspectRatio, normalizeResolutionPreset, videoSizeForProject } from '@/lib/fancut/prompts';
@@ -316,6 +317,54 @@ function selectedOnlyImagesByCut(
   return nextImagesByCut;
 }
 
+function mergeHydratedImagesByCut(params: {
+  cutsByProject: State['cutsByProject'];
+  currentImagesByCut: Record<string, CutImageState>;
+  persistedImagesByCut: Record<string, CutImageState>;
+}) {
+  const validCutIds = new Set(Object.values(params.cutsByProject).flat().map((cut) => cut.cutId));
+  const nextImagesByCut = { ...params.currentImagesByCut };
+
+  for (const [cutId, persistedState] of Object.entries(params.persistedImagesByCut)) {
+    if (!validCutIds.has(cutId)) {
+      continue;
+    }
+
+    const currentState = nextImagesByCut[cutId];
+    if (!currentState?.candidates?.length) {
+      nextImagesByCut[cutId] = persistedState;
+      continue;
+    }
+
+    const persistedCandidates = new Map(
+      (persistedState.candidates ?? []).map((candidate) => [candidate.imageId, candidate])
+    );
+    const mergedCandidates = currentState.candidates.map((candidate) => {
+      const persistedCandidate = persistedCandidates.get(candidate.imageId);
+      if (!persistedCandidate) {
+        return candidate;
+      }
+
+      return {
+        ...persistedCandidate,
+        ...candidate,
+        imageDataUrl: candidate.imageDataUrl || persistedCandidate.imageDataUrl,
+      };
+    });
+
+    const hasHydratedImage = mergedCandidates.some((candidate) => Boolean(candidate.imageDataUrl));
+    nextImagesByCut[cutId] = hasHydratedImage
+      ? {
+          ...currentState,
+          selectedImageId: currentState.selectedImageId ?? persistedState.selectedImageId,
+          candidates: mergedCandidates,
+        }
+      : persistedState;
+  }
+
+  return nextImagesByCut;
+}
+
 function persistedRendersByProject(rendersByProject: Record<string, FinalRender>) {
   return Object.fromEntries(
     Object.entries(rendersByProject).map(([projectId, render]) => [
@@ -351,7 +400,7 @@ function buildPersistableState(
   const imagesByCut = options?.omitImages
     ? {}
     : selectedOnlyImagesByCut(state.imagesByCut, {
-        stripImageDataUrl: options?.stripImageDataUrl,
+        stripImageDataUrl: options?.stripImageDataUrl ?? true,
       });
   const videosByCut: Record<string, VideoAsset> = {};
   if (!options?.omitVideos) {
@@ -393,8 +442,6 @@ function projectFirstPersistableState(state: State): State {
     ...initialState,
     ...buildPersistableState(state, {
       omitImages: true,
-      omitVideos: true,
-      omitRenders: true,
     }),
     cutsByProject: state.cutsByProject,
   };
@@ -562,6 +609,7 @@ type Ctx = {
     bgmOn: boolean;
     subtitleTemplate: 'none' | 'basic';
   }) => Promise<void>;
+  restoreVideoPreview: (cutId: string) => Promise<void>;
 };
 
 const FanCutStudioContext = createContext<Ctx | null>(null);
@@ -573,11 +621,42 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
   const hasInitializedPersistenceRef = useRef(false);
   const imageRequestControllersRef = useRef<Record<string, AbortController>>({});
   const imageProjectControllersRef = useRef<Record<string, AbortController>>({});
+  const restoringVideoPreviewRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
-    const loaded = safeParseState(localStorage.getItem(STORAGE_KEY));
-    if (loaded) dispatch({ type: 'LOAD', payload: cleanLoadedState(loaded) });
-    setIsHydrated(true);
+    let active = true;
+
+    void (async () => {
+      const loaded = safeParseState(localStorage.getItem(STORAGE_KEY));
+      let nextState = loaded ? cleanLoadedState(loaded) : initialState;
+
+      try {
+        const persistedImages = await loadPersistedImagesByCut();
+        nextState = {
+          ...nextState,
+          imagesByCut: mergeHydratedImagesByCut({
+            cutsByProject: nextState.cutsByProject,
+            currentImagesByCut: nextState.imagesByCut,
+            persistedImagesByCut: persistedImages,
+          }),
+        };
+      } catch {
+        // ignore IndexedDB hydration failures
+      }
+
+      if (!active) {
+        return;
+      }
+
+      if (loaded || Object.keys(nextState.imagesByCut).length > 0) {
+        dispatch({ type: 'LOAD', payload: nextState });
+      }
+      setIsHydrated(true);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -588,6 +667,11 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
     }
     persistState(state);
   }, [isHydrated, state]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void persistImagesByCut(state.imagesByCut).catch(() => undefined);
+  }, [isHydrated, state.imagesByCut]);
 
   const api = useMemo<Ctx>(() => {
     const getProject = (projectId: string) => state.projects[projectId];
@@ -747,7 +831,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
           const referenceImageDataUrl = cut.order === 1 ? project.referenceImageDataUrl : undefined;
 
           const existing = state.imagesByCut[cut.cutId];
-          if (existing?.candidates?.length) {
+          if (existing?.candidates?.some((candidate) => Boolean(candidate.imageDataUrl))) {
             continue;
           }
 
@@ -853,6 +937,9 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
       const selectedImage = selectedImageForCut(state, cutId);
       if (!selectedImage) throw new Error('선택된 이미지가 없습니다.');
+      if (!selectedImage.imageDataUrl) {
+        throw new Error('선택된 이미지를 복원하지 못했습니다. 이미지 단계에서 다시 생성해 주세요.');
+      }
       const orderedCuts = getCuts(cut.projectId).slice().sort((a, b) => a.order - b.order);
       const cutIndex = orderedCuts.findIndex((entry) => entry.cutId === cutId);
       const nextCut = cutIndex >= 0 ? orderedCuts[cutIndex + 1] : undefined;
@@ -1025,6 +1112,44 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       dispatch({ type: 'SET_RENDER', projectId, render });
     };
 
+    const restoreVideoPreview: Ctx['restoreVideoPreview'] = async (cutId) => {
+      const cut = Object.values(state.cutsByProject).flat().find((entry) => entry.cutId === cutId);
+      if (!cut) {
+        return;
+      }
+
+      const project = getProject(cut.projectId);
+      const video = state.videosByCut[cutId];
+      if (!project || !video?.providerVideoId || video.videoObjectUrl || restoringVideoPreviewRef.current[cutId]) {
+        return;
+      }
+
+      restoringVideoPreviewRef.current[cutId] = true;
+
+      try {
+        const response = await fetch(
+          `/api/fancut/videos/${video.providerVideoId}/content?durationSec=${cut.durationSec}&size=${videoSizeForProject(project)}`,
+          {
+            cache: 'no-store',
+            headers: providerHeaders({ includeDeapi: true }),
+          }
+        );
+        const blob = await parseBlobOrThrow(response);
+        const objectUrl = URL.createObjectURL(blob);
+
+        dispatch({
+          type: 'SET_VIDEO',
+          cutId,
+          video: {
+            ...video,
+            videoObjectUrl: objectUrl,
+          },
+        });
+      } finally {
+        delete restoringVideoPreviewRef.current[cutId];
+      }
+    };
+
     return {
       state,
       isHydrated,
@@ -1042,6 +1167,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       selectImage,
       generateVideoForCut,
       renderFinalVideo,
+      restoreVideoPreview,
     };
   }, [isHydrated, providerHeaders, state]);
 

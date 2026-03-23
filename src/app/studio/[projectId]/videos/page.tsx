@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { MotionType } from '@/types/fancut';
 import { useFanCutStudio } from '@/contexts/FanCutStudioContext';
 import { WorkflowStepper } from '@/components/studio/WorkflowStepper';
@@ -20,7 +20,7 @@ export default function VideosPage() {
   const params = useParams<{ projectId: string }>();
   const projectId = params.projectId;
   const router = useRouter();
-  const { getProject, getCuts, state, generateVideoForCut, isHydrated } = useFanCutStudio();
+  const { getProject, getCuts, state, generateVideoForCut, restoreVideoPreview, isHydrated } = useFanCutStudio();
 
   const project = getProject(projectId);
   const cuts = getCuts(projectId).slice().sort((a, b) => a.order - b.order);
@@ -70,6 +70,22 @@ export default function VideosPage() {
   const activeHasError = activeCut ? Boolean(errorByCut[activeCut.cutId]) : false;
   const activeStatus = activeCut ? getCutStatus(activeCut.cutId) : 'needs_image';
   const progress = cuts.length ? Math.round((generatedCount / cuts.length) * 100) : 0;
+
+  useEffect(() => {
+    if (!activeCut) {
+      return;
+    }
+
+    const activeAsset = state.videosByCut[activeCut.cutId];
+    if (!activeAsset?.providerVideoId || activeAsset.videoObjectUrl) {
+      return;
+    }
+
+    void restoreVideoPreview(activeCut.cutId).catch((error) => {
+      const message = error instanceof Error ? error.message : '영상 미리보기를 복원하지 못했습니다.';
+      setErrorByCut((prev) => ({ ...prev, [activeCut.cutId]: message }));
+    });
+  }, [activeCut, restoreVideoPreview, state.videosByCut]);
 
   if (!isHydrated) {
     return (
