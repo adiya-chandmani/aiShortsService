@@ -85,6 +85,8 @@ export default function RenderPage() {
   const [youtubeStatus, setYoutubeStatus] = useState<PlatformConnectionStatus | null>(null);
   const [isCheckingYouTube, setIsCheckingYouTube] = useState(false);
   const [uploadState, setUploadState] = useState<UploadState>({ phase: 'idle' });
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const [restoredRenderId, setRestoredRenderId] = useState<string | null>(null);
 
   const allVideosPresent = useMemo(
     () => cuts.length > 0 && cuts.every((c) => Boolean(state.videosByCut[c.cutId]?.providerVideoId)),
@@ -139,41 +141,79 @@ export default function RenderPage() {
     }
   }, [pathname, router, searchParams]);
 
-  if (!project) {
-    return (
-      <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-900">
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">프로젝트를 찾을 수 없어요</h1>
-          <Link href="/studio/new" className="mt-6 inline-flex rounded-xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white">
-            프로젝트 시작하기
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!isUploadOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeUploadModal();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isUploadOpen]);
 
   const totalDurationSec = cuts.reduce((sum, cut) => sum + (cut.durationSec ?? 0), 0);
-  const aspectRatioLabel = project.aspectRatio ?? '9:16';
-  const resolutionLabel = project.resolution ?? '1080p';
+  const aspectRatioLabel = project?.aspectRatio ?? '9:16';
+  const resolutionLabel = project?.resolution ?? '1080p';
   const motionTypeDefault: MotionType = 'zoom_in';
   const bgmOn = false;
   const subtitleTemplate: 'none' | 'basic' = 'none';
 
   const handleRender = async () => {
     setIsRendering(true);
+    setRenderError(null);
     try {
       await renderFinalVideo({ projectId, motionTypeDefault, bgmOn, subtitleTemplate });
+    } catch (error) {
+      setRenderError(error instanceof Error ? error.message : '최종 렌더에 실패했습니다.');
     } finally {
       setIsRendering(false);
     }
   };
 
   const handleOpenUpload = (platform: SocialPlatform = 'youtube') => {
+    if (!project) return;
     setSelectedPlatform(platform);
     setDraft(buildUploadDraft({ project, cuts, platform }));
     setUploadState({ phase: 'idle' });
     setIsUploadOpen(true);
   };
+
+  const closeUploadModal = () => {
+    setIsUploadOpen(false);
+  };
+
+  useEffect(() => {
+    if (!render || render.outputObjectUrl || !allVideosPresent) {
+      return;
+    }
+    if (restoredRenderId === render.renderId) {
+      return;
+    }
+
+    setRestoredRenderId(render.renderId);
+    setIsRendering(true);
+    setRenderError(null);
+
+    void renderFinalVideo({ projectId, motionTypeDefault, bgmOn, subtitleTemplate })
+      .catch((error) => {
+        setRenderError(error instanceof Error ? error.message : '이전 렌더를 복원하지 못했습니다.');
+      })
+      .finally(() => {
+        setIsRendering(false);
+      });
+  }, [
+    allVideosPresent,
+    bgmOn,
+    motionTypeDefault,
+    projectId,
+    render,
+    renderFinalVideo,
+    restoredRenderId,
+    subtitleTemplate,
+  ]);
 
   const handleConnectYouTube = () => {
     window.location.href = `/api/social/youtube/auth?returnTo=${encodeURIComponent(`${pathname}?upload=youtube`)}`;
@@ -190,7 +230,7 @@ export default function RenderPage() {
   };
 
   const handleUpload = async () => {
-    if (!render?.outputObjectUrl || !draft) {
+    if (!project || !render?.outputObjectUrl || !draft) {
       setUploadState({ phase: 'error', message: '먼저 최종 렌더를 생성해 주세요.' });
       return;
     }
@@ -248,6 +288,19 @@ export default function RenderPage() {
     }
   };
 
+  if (!project) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">프로젝트를 찾을 수 없어요</h1>
+          <Link href="/studio/new" className="mt-6 inline-flex rounded-xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white">
+            프로젝트 시작하기
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-50 transition-theme dark:bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -264,6 +317,12 @@ export default function RenderPage() {
               <div className="mt-3">
                 <WorkflowStepper projectId={projectId} />
               </div>
+              {renderError && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">
+                  <div className="font-semibold">렌더 실패</div>
+                  <div className="mt-1 break-words">{renderError}</div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -390,7 +449,12 @@ export default function RenderPage() {
                           />
                         ) : (
                           <div className="flex aspect-[9/16] items-center justify-center bg-black/60 px-6 text-center text-sm text-slate-200">
-                            {allVideosPresent ? (
+                            {isRendering && render ? (
+                              <div>
+                                <div className="font-semibold">이전 렌더 복원 중…</div>
+                                <div className="mt-1 text-xs text-slate-300">잠시만 기다리면 최종 MP4를 다시 불러옵니다.</div>
+                              </div>
+                            ) : allVideosPresent ? (
                               <div>
                                 <div className="font-semibold">렌더 준비 완료</div>
                                 <div className="mt-1 text-xs text-slate-300">오른쪽 상단의 “렌더 생성”을 눌러 최종 결과를 만들어요.</div>
@@ -493,27 +557,49 @@ export default function RenderPage() {
       </div>
 
       {isUploadOpen && draft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 py-8 backdrop-blur-sm">
-          <div className="w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
-            <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/55 px-4 py-4 backdrop-blur-sm sm:py-8"
+          onClick={closeUploadModal}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upload-modal-title"
+            className="mx-auto w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 dark:border-slate-700 dark:bg-slate-900">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">One-click upload</div>
-                <h2 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">숏폼 업로드</h2>
+                <h2 id="upload-modal-title" className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                  숏폼 업로드
+                </h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   플랫폼을 고르고 제목, 설명, 해시태그를 확인한 뒤 바로 업로드할 수 있습니다.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setIsUploadOpen(false)}
-                className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                onClick={closeUploadModal}
+                aria-label="업로드 모달 닫기"
+                title="업로드 모달 닫기"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                닫기
+                <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                  <path
+                    d="M6.75 6.75 17.25 17.25M17.25 6.75 6.75 17.25"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeWidth="1.8"
+                  />
+                </svg>
               </button>
             </div>
 
-            <div className="grid gap-0 lg:grid-cols-[1.3fr_0.9fr]">
-              <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700 lg:border-b-0 lg:border-r">
+            <div className="max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="grid gap-0 lg:grid-cols-[1.3fr_0.9fr]">
+                <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-700 lg:border-b-0 lg:border-r">
                 <div className="flex flex-wrap gap-2">
                   {(['youtube', 'tiktok'] as SocialPlatform[]).map((platform) => (
                     <button
@@ -767,12 +853,13 @@ export default function RenderPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setIsUploadOpen(false)}
+                      onClick={closeUploadModal}
                       className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       취소
                     </button>
                   </div>
+                </div>
                 </div>
               </div>
             </div>

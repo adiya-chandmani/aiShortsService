@@ -10,6 +10,27 @@ export default function StudioIndexPage() {
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const projects = Object.values(state.projects).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
+  const getProjectHref = (projectId: string) => {
+    const cuts = state.cutsByProject[projectId] ?? [];
+    const selectedImageCount = cuts.filter((cut) => Boolean(state.imagesByCut[cut.cutId]?.selectedImageId)).length;
+    const generatedVideoCount = cuts.filter((cut) => Boolean(state.videosByCut[cut.cutId]?.providerVideoId)).length;
+    const hasRender = Boolean(state.rendersByProject[projectId]);
+
+    if (hasRender) {
+      return `/studio/${projectId}/render`;
+    }
+    if (cuts.length > 0 && generatedVideoCount === cuts.length) {
+      return `/studio/${projectId}/render`;
+    }
+    if (generatedVideoCount > 0 || (cuts.length > 0 && selectedImageCount === cuts.length)) {
+      return `/studio/${projectId}/videos`;
+    }
+    if (selectedImageCount > 0) {
+      return `/studio/${projectId}/images`;
+    }
+    return `/studio/${projectId}/plot`;
+  };
+
   const handleDeleteProject = (projectId: string, title: string) => {
     const confirmed = window.confirm(`"${title || 'untitled project'}" 프로젝트를 삭제할까요?\n플롯, 이미지, 영상, 렌더 결과도 함께 삭제됩니다.`);
     if (!confirmed) return;
@@ -105,7 +126,7 @@ export default function StudioIndexPage() {
                     {deletingProjectId === project.projectId ? '삭제 중' : '삭제'}
                   </button>
                 </div>
-                <Link href={`/studio/${project.projectId}/plot`} className="mt-3 block">
+                <Link href={getProjectHref(project.projectId)} className="mt-3 block">
                   <div className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                     {project.ideaText}
                   </div>
@@ -122,4 +143,3 @@ export default function StudioIndexPage() {
     </StudioShell>
   );
 }
-

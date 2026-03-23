@@ -283,6 +283,38 @@ function safeParseState(raw: string | null): State | null {
   }
 }
 
+function selectedOnlyImagesByCut(imagesByCut: Record<string, CutImageState>) {
+  const nextImagesByCut: Record<string, CutImageState> = {};
+
+  for (const [cutId, imageState] of Object.entries(imagesByCut)) {
+    const selectedCandidate = imageState.candidates?.find((candidate) => candidate.imageId === imageState.selectedImageId);
+    if (!selectedCandidate) {
+      continue;
+    }
+
+    nextImagesByCut[cutId] = {
+      cutId,
+      selectedImageId: selectedCandidate.imageId,
+      candidates: [selectedCandidate],
+    };
+  }
+
+  return nextImagesByCut;
+}
+
+function persistedRendersByProject(rendersByProject: Record<string, FinalRender>) {
+  return Object.fromEntries(
+    Object.entries(rendersByProject).map(([projectId, render]) => [
+      projectId,
+      {
+        ...render,
+        outputObjectUrl: '',
+        thumbnailDataUrl: '',
+      } satisfies FinalRender,
+    ])
+  );
+}
+
 function persistableState(state: State): State {
   const projects = Object.fromEntries(
     Object.entries(state.projects).map(([projectId, project]) => [
@@ -294,15 +326,10 @@ function persistableState(state: State): State {
     ])
   );
 
-  const imagesByCut: Record<string, CutImageState> = {};
+  const imagesByCut = selectedOnlyImagesByCut(state.imagesByCut);
   const videosByCut: Record<string, VideoAsset> = {};
   for (const [cutId, video] of Object.entries(state.videosByCut)) {
     videosByCut[cutId] = { ...video, videoObjectUrl: '' };
-  }
-
-  const rendersByProject: Record<string, FinalRender> = {};
-  for (const [projectId, render] of Object.entries(state.rendersByProject)) {
-    rendersByProject[projectId] = { ...render, outputObjectUrl: '', thumbnailDataUrl: '' };
   }
 
   return {
@@ -311,7 +338,7 @@ function persistableState(state: State): State {
     imagesByCut,
     imageJobsByCut: {},
     videosByCut,
-    rendersByProject,
+    rendersByProject: persistedRendersByProject(state.rendersByProject),
   };
 }
 
@@ -326,6 +353,7 @@ function fallbackPersistableState(state: State): State {
     ])
   );
 
+  const imagesByCut = selectedOnlyImagesByCut(state.imagesByCut);
   const videosByCut: Record<string, VideoAsset> = {};
   for (const [cutId, video] of Object.entries(state.videosByCut)) {
     videosByCut[cutId] = {
@@ -337,10 +365,11 @@ function fallbackPersistableState(state: State): State {
   return {
     ...initialState,
     projects,
+    imagesByCut,
     cutsByProject: state.cutsByProject,
     imageJobsByCut: {},
     videosByCut,
-    rendersByProject: {},
+    rendersByProject: persistedRendersByProject(state.rendersByProject),
   };
 }
 
@@ -376,7 +405,6 @@ function cleanLoadedState(state: State): State {
     ])
   );
 
-  const imagesByCut: Record<string, CutImageState> = {};
   const videosByCut: Record<string, VideoAsset> = {};
   for (const [cutId, video] of Object.entries(state.videosByCut)) {
     videosByCut[cutId] = {
@@ -385,21 +413,12 @@ function cleanLoadedState(state: State): State {
     };
   }
 
-  const rendersByProject: Record<string, FinalRender> = {};
-  for (const [projectId, render] of Object.entries(state.rendersByProject)) {
-    rendersByProject[projectId] = {
-      ...render,
-      outputObjectUrl: '',
-      thumbnailDataUrl: '',
-    };
-  }
-
   return {
     ...state,
     projects,
-    imagesByCut,
+    imagesByCut: state.imagesByCut,
     videosByCut,
-    rendersByProject,
+    rendersByProject: persistedRendersByProject(state.rendersByProject),
   };
 }
 
@@ -880,6 +899,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       });
       const blob = await parseBlobOrThrow(response);
       const outputObjectUrl = URL.createObjectURL(blob);
+      const previousRenderUrl = state.rendersByProject[projectId]?.outputObjectUrl;
+      if (previousRenderUrl) {
+        URL.revokeObjectURL(previousRenderUrl);
+      }
 
       const firstSelectedImage = selectedImageForCut(state, orderedCuts[0].cutId);
       const thumbnailDataUrl = firstSelectedImage
