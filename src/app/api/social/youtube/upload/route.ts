@@ -1,5 +1,9 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { DeapiRequestError } from '@/lib/fancut/deapi';
+import { buildFinalRenderBuffer } from '@/lib/fancut/final-render';
+import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
+import type { VideoSize } from '@/lib/fancut/prompts';
 import { baseCookieOptions, sealCookieValue, unsealCookieValue, YOUTUBE_SESSION_COOKIE } from '@/lib/social/session';
 import {
   createYouTubeUploadSession,
@@ -13,6 +17,18 @@ import type { UploadResult, YouTubePrivacyStatus } from '@/types/social';
 
 export const runtime = 'nodejs';
 
+type UploadFromClipsRequest = {
+  title?: string;
+  description?: string;
+  hashtags?: string;
+  privacyStatus?: YouTubePrivacyStatus;
+  clips?: Array<{
+    videoId: string;
+    durationSec: number;
+  }>;
+  size?: VideoSize;
+};
+
 function parseHashtags(raw: string) {
   return Array.from(
     new Set(
@@ -22,6 +38,13 @@ function parseHashtags(raw: string) {
         .filter(Boolean)
     )
   ).slice(0, 8);
+}
+
+function parsePrivacyStatus(raw?: string) {
+  if (raw === 'public' || raw === 'unlisted' || raw === 'private') {
+    return raw;
+  }
+  return 'private' satisfies YouTubePrivacyStatus;
 }
 
 export async function POST(request: Request) {
@@ -41,23 +64,56 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData = await request.formData();
-    const video = formData.get('video');
-    const title = String(formData.get('title') ?? '').trim();
-    const description = String(formData.get('description') ?? '').trim();
-    const hashtags = parseHashtags(String(formData.get('hashtags') ?? ''));
-    const privacyStatus = (String(formData.get('privacyStatus') ?? 'private') as YouTubePrivacyStatus) || 'private';
+    const providerKeys = readProviderKeyOverrides(request);
+    const contentType = request.headers.get('content-type') ?? '';
 
-    if (!(video instanceof File)) {
-      throw new YouTubeApiError('업로드할 MP4 파일을 찾지 못했습니다.', 400);
+    let title = '';
+    let description = '';
+    let hashtags: string[] = [];
+    let privacyStatus: YouTubePrivacyStatus = 'private';
+    let mimeType = 'video/mp4';
+    let videoBuffer: Buffer;
+
+    if (contentType.includes('application/json')) {
+      const body = (await request.json()) as UploadFromClipsRequest;
+      title = String(body.title ?? '').trim();
+      description = String(body.description ?? '').trim();
+      hashtags = parseHashtags(String(body.hashtags ?? ''));
+      privacyStatus = parsePrivacyStatus(body.privacyStatus);
+
+      if (!body.clips?.length) {
+        throw new YouTubeApiError('업로드할 컷 정보를 찾지 못했습니다.', 400);
+      }
+      if (!body.size) {
+        throw new YouTubeApiError('업로드 해상도 정보를 찾지 못했습니다.', 400);
+      }
+
+      videoBuffer = await buildFinalRenderBuffer({
+        clips: body.clips,
+        size: body.size,
+        deapiApiKey: providerKeys.deapiApiKey,
+      });
+    } else {
+      const formData = await request.formData();
+      const video = formData.get('video');
+      title = String(formData.get('title') ?? '').trim();
+      description = String(formData.get('description') ?? '').trim();
+      hashtags = parseHashtags(String(formData.get('hashtags') ?? ''));
+      privacyStatus = parsePrivacyStatus(String(formData.get('privacyStatus') ?? 'private'));
+
+      if (!(video instanceof File)) {
+        throw new YouTubeApiError('업로드할 MP4 파일을 찾지 못했습니다.', 400);
+      }
+
+      mimeType = video.type || 'video/mp4';
+      videoBuffer = Buffer.from(await video.arrayBuffer());
     }
+
     if (!title) {
       throw new YouTubeApiError('업로드 제목을 입력해 주세요.', 400);
     }
 
     const refreshed = await refreshYouTubeSession({ request, session });
-    const mimeType = video.type || 'video/mp4';
-    const videoBuffer = Buffer.from(await video.arrayBuffer());
     const descriptionWithHashtags = [description, hashtags.map((tag) => `#${tag}`).join(' ')].filter(Boolean).join('\n\n');
 
     const uploadUrl = await createYouTubeUploadSession({
@@ -93,7 +149,7 @@ export async function POST(request: Request) {
     });
     return response;
   } catch (err) {
-    const status = err instanceof YouTubeApiError ? err.status : 500;
+    const status = err instanceof YouTubeApiError || err instanceof DeapiRequestError ? err.status : 500;
     const message = err instanceof Error ? err.message : 'YouTube 업로드에 실패했습니다.';
     const response = NextResponse.json({ error: message }, { status });
     if (status === 401 || status === 403) {

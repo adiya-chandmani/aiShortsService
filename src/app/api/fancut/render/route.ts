@@ -1,13 +1,6 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { NextResponse } from 'next/server';
-import { concatMp4Clips, trimAndNormalizeClip, withTempDir } from '@/lib/fancut/ffmpeg';
-import {
-  deapiJson,
-  deapiResultUrl,
-  DeapiRequestError,
-  type DeapiStatusPayload,
-} from '@/lib/fancut/deapi';
+import { DeapiRequestError } from '@/lib/fancut/deapi';
+import { buildFinalRenderBuffer } from '@/lib/fancut/final-render';
 import { readProviderKeyOverrides } from '@/lib/fancut/provider-keys';
 import type { VideoSize } from '@/lib/fancut/prompts';
 
@@ -29,54 +22,18 @@ export async function POST(request: Request) {
     if (!body.clips?.length) {
       throw new DeapiRequestError('병합할 컷 영상이 없습니다.', 400);
     }
+    const outputBuffer = await buildFinalRenderBuffer({
+      clips: body.clips,
+      size: body.size,
+      deapiApiKey: providerKeys.deapiApiKey,
+    });
 
-    return await withTempDir('fancut-render-', async (dir) => {
-      const normalizedPaths: string[] = [];
-
-      for (let index = 0; index < body.clips.length; index += 1) {
-        const clip = body.clips[index];
-        const payload = await deapiJson<DeapiStatusPayload>(`/request-status/${clip.videoId}`, {
-          method: 'GET',
-        }, 0, providerKeys.deapiApiKey);
-        const videoUri = deapiResultUrl(payload);
-        if (!videoUri) {
-          throw new DeapiRequestError(`CUT ${index + 1}의 deAPI 영상 URL을 찾지 못했습니다.`, 502);
-        }
-
-        const upstream = await fetch(videoUri, { method: 'GET', cache: 'no-store' });
-        if (!upstream.ok) {
-          throw new DeapiRequestError(`CUT ${index + 1}의 deAPI 영상 다운로드에 실패했습니다. (${upstream.status})`, upstream.status);
-        }
-        const sourceBuffer = Buffer.from(await upstream.arrayBuffer());
-
-        const rawPath = path.join(dir, `clip-${index}-raw.mp4`);
-        const normalizedPath = path.join(dir, `clip-${index}.mp4`);
-
-        await fs.writeFile(rawPath, sourceBuffer);
-        await trimAndNormalizeClip({
-          inputPath: rawPath,
-          outputPath: normalizedPath,
-          size: body.size,
-          durationSec: clip.durationSec,
-        });
-        normalizedPaths.push(normalizedPath);
-      }
-
-      const outputPath = path.join(dir, 'final.mp4');
-      await concatMp4Clips({
-        inputPaths: normalizedPaths,
-        outputPath,
-        workDir: dir,
-      });
-
-      const outputBuffer = await fs.readFile(outputPath);
-      return new NextResponse(outputBuffer, {
-        headers: {
-          'Content-Type': 'video/mp4',
-          'Cache-Control': 'no-store',
-          'Content-Disposition': 'attachment; filename="fancut-final.mp4"',
-        },
-      });
+    return new NextResponse(outputBuffer, {
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Cache-Control': 'no-store',
+        'Content-Disposition': 'attachment; filename="fancut-final.mp4"',
+      },
     });
   } catch (error) {
     const status = error instanceof DeapiRequestError ? error.status : 500;

@@ -6,7 +6,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { MotionType } from '@/types/fancut';
 import type { PlatformConnectionStatus, SocialPlatform, UploadDraft, UploadResult } from '@/types/social';
 import { useFanCutStudio } from '@/contexts/FanCutStudioContext';
+import { useProviderSettings } from '@/contexts/ProviderSettingsContext';
 import { WorkflowStepper } from '@/components/studio/WorkflowStepper';
+import { videoSizeForProject } from '@/lib/fancut/prompts';
 import { buildUploadDraft } from '@/lib/social/metadata';
 
 function classNames(...values: Array<string | false | null | undefined>) {
@@ -70,6 +72,7 @@ export default function RenderPage() {
   const searchParams = useSearchParams();
   const projectId = params.projectId;
   const { getProject, getCuts, state, renderFinalVideo, isHydrated } = useFanCutStudio();
+  const { providerHeaders } = useProviderSettings();
 
   const project = getProject(projectId);
   const cuts = useMemo(
@@ -236,36 +239,40 @@ export default function RenderPage() {
     }
 
     try {
-      const renderBlob = await fetch(render.outputObjectUrl, { cache: 'no-store' }).then(async (response) => {
-        if (!response.ok) {
-          throw new Error('최종 렌더 파일을 불러오지 못했습니다.');
-        }
-        return await response.blob();
-      });
-
       if (selectedPlatform === 'youtube') {
         if (!youtubeStatus?.connected) {
           throw new Error('먼저 YouTube 채널을 연결해 주세요.');
         }
 
-        setUploadState({ phase: 'uploading', message: 'YouTube Shorts로 업로드 중입니다…' });
+        const clips = cuts.map((cut) => {
+          const videoId = state.videosByCut[cut.cutId]?.providerVideoId;
+          if (!videoId) {
+            throw new Error(`CUT ${cut.order} 영상이 아직 준비되지 않았습니다.`);
+          }
 
-        const formData = new FormData();
-        formData.append(
-          'video',
-          new File([renderBlob], `${project.title.replace(/\s+/g, '-').toLowerCase() || 'fancut'}.mp4`, {
-            type: renderBlob.type || 'video/mp4',
-          })
-        );
-        formData.append('title', draft.title);
-        formData.append('description', draft.description);
-        formData.append('hashtags', draft.hashtags);
-        formData.append('privacyStatus', draft.privacyStatus);
+          return {
+            videoId,
+            durationSec: cut.durationSec,
+          };
+        });
+
+        setUploadState({ phase: 'uploading', message: 'YouTube Shorts로 업로드 중입니다…' });
 
         const result = await readJsonOrThrow<UploadResult>(
           await fetch('/api/social/youtube/upload', {
             method: 'POST',
-            body: formData,
+            headers: providerHeaders({
+              headers: { 'Content-Type': 'application/json' },
+              includeDeapi: true,
+            }),
+            body: JSON.stringify({
+              title: draft.title,
+              description: draft.description,
+              hashtags: draft.hashtags,
+              privacyStatus: draft.privacyStatus,
+              clips,
+              size: videoSizeForProject(project),
+            }),
           })
         );
         setUploadState({ phase: 'success', result });

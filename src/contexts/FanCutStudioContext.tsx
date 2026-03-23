@@ -287,7 +287,10 @@ function safeParseState(raw: string | null): State | null {
   }
 }
 
-function selectedOnlyImagesByCut(imagesByCut: Record<string, CutImageState>) {
+function selectedOnlyImagesByCut(
+  imagesByCut: Record<string, CutImageState>,
+  options?: { stripImageDataUrl?: boolean }
+) {
   const nextImagesByCut: Record<string, CutImageState> = {};
 
   for (const [cutId, imageState] of Object.entries(imagesByCut)) {
@@ -299,7 +302,14 @@ function selectedOnlyImagesByCut(imagesByCut: Record<string, CutImageState>) {
     nextImagesByCut[cutId] = {
       cutId,
       selectedImageId: selectedCandidate.imageId,
-      candidates: [selectedCandidate],
+      candidates: [
+        options?.stripImageDataUrl
+          ? {
+              ...selectedCandidate,
+              imageDataUrl: '',
+            }
+          : selectedCandidate,
+      ],
     };
   }
 
@@ -319,7 +329,15 @@ function persistedRendersByProject(rendersByProject: Record<string, FinalRender>
   );
 }
 
-function persistableState(state: State): State {
+function buildPersistableState(
+  state: State,
+  options?: {
+    stripImageDataUrl?: boolean;
+    omitImages?: boolean;
+    omitVideos?: boolean;
+    omitRenders?: boolean;
+  }
+): State {
   const projects = Object.fromEntries(
     Object.entries(state.projects).map(([projectId, project]) => [
       projectId,
@@ -330,10 +348,16 @@ function persistableState(state: State): State {
     ])
   );
 
-  const imagesByCut = selectedOnlyImagesByCut(state.imagesByCut);
+  const imagesByCut = options?.omitImages
+    ? {}
+    : selectedOnlyImagesByCut(state.imagesByCut, {
+        stripImageDataUrl: options?.stripImageDataUrl,
+      });
   const videosByCut: Record<string, VideoAsset> = {};
-  for (const [cutId, video] of Object.entries(state.videosByCut)) {
-    videosByCut[cutId] = { ...video, videoObjectUrl: '' };
+  if (!options?.omitVideos) {
+    for (const [cutId, video] of Object.entries(state.videosByCut)) {
+      videosByCut[cutId] = { ...video, videoObjectUrl: '' };
+    }
   }
 
   return {
@@ -342,38 +366,37 @@ function persistableState(state: State): State {
     imagesByCut,
     imageJobsByCut: {},
     videosByCut,
-    rendersByProject: persistedRendersByProject(state.rendersByProject),
+    rendersByProject: options?.omitRenders ? {} : persistedRendersByProject(state.rendersByProject),
   };
 }
 
 function fallbackPersistableState(state: State): State {
-  const projects = Object.fromEntries(
-    Object.entries(state.projects).map(([projectId, project]) => [
-      projectId,
-      {
-        ...project,
-        referenceImageDataUrl: undefined,
-      },
-    ])
-  );
-
-  const imagesByCut = selectedOnlyImagesByCut(state.imagesByCut);
-  const videosByCut: Record<string, VideoAsset> = {};
-  for (const [cutId, video] of Object.entries(state.videosByCut)) {
-    videosByCut[cutId] = {
-      ...video,
-      videoObjectUrl: '',
-    };
-  }
-
   return {
     ...initialState,
-    projects,
-    imagesByCut,
+    ...buildPersistableState(state, {
+      stripImageDataUrl: true,
+    }),
+  };
+}
+
+function minimalPersistableState(state: State): State {
+  return {
+    ...initialState,
+    ...buildPersistableState(state, {
+      omitImages: true,
+    }),
+  };
+}
+
+function projectFirstPersistableState(state: State): State {
+  return {
+    ...initialState,
+    ...buildPersistableState(state, {
+      omitImages: true,
+      omitVideos: true,
+      omitRenders: true,
+    }),
     cutsByProject: state.cutsByProject,
-    imageJobsByCut: {},
-    videosByCut,
-    rendersByProject: persistedRendersByProject(state.rendersByProject),
   };
 }
 
@@ -384,7 +407,7 @@ function isQuotaExceededError(error: unknown) {
 
 function persistState(state: State) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistableState(state)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildPersistableState(state)));
   } catch (error) {
     if (!isQuotaExceededError(error)) {
       throw error;
@@ -392,8 +415,20 @@ function persistState(state: State) {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackPersistableState(state)));
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
+    } catch (fallbackError) {
+      if (!isQuotaExceededError(fallbackError)) {
+        throw fallbackError;
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(minimalPersistableState(state)));
+      } catch (minimalError) {
+        if (!isQuotaExceededError(minimalError)) {
+          throw minimalError;
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projectFirstPersistableState(state)));
+      }
     }
   }
 }
@@ -535,6 +570,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
   const { providerHeaders } = useProviderSettings();
   const [state, dispatch] = useReducer(reducer, initialState);
   const [isHydrated, setIsHydrated] = useState(false);
+  const hasInitializedPersistenceRef = useRef(false);
   const imageRequestControllersRef = useRef<Record<string, AbortController>>({});
   const imageProjectControllersRef = useRef<Record<string, AbortController>>({});
 
@@ -546,6 +582,10 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!isHydrated) return;
+    if (!hasInitializedPersistenceRef.current) {
+      hasInitializedPersistenceRef.current = true;
+      return;
+    }
     persistState(state);
   }, [isHydrated, state]);
 
