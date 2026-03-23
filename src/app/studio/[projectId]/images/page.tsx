@@ -45,7 +45,7 @@ export default function ImagesPage() {
   const params = useParams<{ projectId: string }>();
   const projectId = params.projectId;
   const router = useRouter();
-  const { getProject, getCuts, state, ensureImagesForProject, regenerateImagesForCut, selectImage, cancelImageGeneration } = useFanCutStudio();
+  const { getProject, getCuts, state, ensureImagesForProject, regenerateImagesForCut, selectImage, cancelImageGeneration, isHydrated } = useFanCutStudio();
 
   const project = getProject(projectId);
   const cuts = getCuts(projectId).slice().sort((a, b) => a.order - b.order);
@@ -97,6 +97,16 @@ export default function ImagesPage() {
   const activeIsGenerating = activeCut ? state.imageJobsByCut[activeCut.cutId]?.status === 'generating' : false;
 
   const progress = cuts.length === 0 ? 0 : Math.round((selectedCount / cuts.length) * 100);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">프로젝트를 불러오는 중…</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

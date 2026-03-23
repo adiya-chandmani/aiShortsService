@@ -185,15 +185,29 @@ function PromptBar({
           disabled={disabled || submitting}
           onClick={onSubmit}
           className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-500/20 transition hover:scale-[1.02] disabled:opacity-50 dark:bg-white dark:text-[#0b0b0d] dark:shadow-white/15"
-          aria-label="생성"
-          title="생성"
+          aria-label={submitting ? '생성 중' : '생성'}
+          aria-busy={submitting}
+          title={submitting ? '생성 중' : '생성'}
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 12h12" strokeLinecap="round" />
-            <path d="M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          {submitting ? (
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : (
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h12" strokeLinecap="round" />
+              <path d="M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </button>
       </div>
+
+      {submitting && (
+        <div className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-sky-500 dark:bg-sky-300" />
+            <span>플롯을 생성하는 중입니다. 잠시만 기다려 주세요.</span>
+          </div>
+        </div>
+      )}
 
       {errorDetail && (
         <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700/40 dark:bg-red-900/20 dark:text-red-100">

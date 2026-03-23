@@ -69,7 +69,7 @@ export default function RenderPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const projectId = params.projectId;
-  const { getProject, getCuts, state, renderFinalVideo } = useFanCutStudio();
+  const { getProject, getCuts, state, renderFinalVideo, isHydrated } = useFanCutStudio();
 
   const project = getProject(projectId);
   const cuts = useMemo(
@@ -287,6 +287,16 @@ export default function RenderPage() {
       });
     }
   };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">프로젝트를 불러오는 중…</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

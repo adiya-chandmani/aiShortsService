@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type {
   AspectRatio,
   CutImageState,
@@ -488,6 +488,7 @@ type CreateProjectInput = {
 
 type Ctx = {
   state: State;
+  isHydrated: boolean;
   createProjectAndPlot: (input: CreateProjectInput) => Promise<{ projectId: string }>;
   regenerateProjectPlot: (projectId: string) => Promise<void>;
   deleteProject: (projectId: string) => void;
@@ -513,17 +514,20 @@ const FanCutStudioContext = createContext<Ctx | null>(null);
 
 export function FanCutStudioProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [isHydrated, setIsHydrated] = useState(false);
   const imageRequestControllersRef = useRef<Record<string, AbortController>>({});
   const imageProjectControllersRef = useRef<Record<string, AbortController>>({});
 
   useEffect(() => {
     const loaded = safeParseState(localStorage.getItem(STORAGE_KEY));
     if (loaded) dispatch({ type: 'LOAD', payload: cleanLoadedState(loaded) });
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
     persistState(state);
-  }, [state]);
+  }, [isHydrated, state]);
 
   const api = useMemo<Ctx>(() => {
     const getProject = (projectId: string) => state.projects[projectId];
@@ -924,6 +928,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
 
     return {
       state,
+      isHydrated,
       createProjectAndPlot,
       regenerateProjectPlot,
       deleteProject,
@@ -939,7 +944,7 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
       generateVideoForCut,
       renderFinalVideo,
     };
-  }, [state]);
+  }, [isHydrated, state]);
 
   return <FanCutStudioContext.Provider value={api}>{children}</FanCutStudioContext.Provider>;
 }
