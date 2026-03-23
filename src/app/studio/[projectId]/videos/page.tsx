@@ -7,6 +7,8 @@ import type { MotionType } from '@/types/fancut';
 import { useFanCutStudio } from '@/contexts/FanCutStudioContext';
 import { WorkflowStepper } from '@/components/studio/WorkflowStepper';
 
+const BULK_VIDEO_QUEUE_GAP_MS = 1_500;
+
 const MOTIONS: Array<{ value: MotionType; label: string; desc: string }> = [
   { value: 'static', label: '정지', desc: '가장 안정적' },
   { value: 'zoom_in', label: '줌인', desc: '집중도 상승' },
@@ -118,7 +120,7 @@ export default function VideosPage() {
       for (const [index, cutId] of cutIds.entries()) {
         await handleGenerate(cutId);
         if (index < cutIds.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 4000));
+          await new Promise((resolve) => setTimeout(resolve, BULK_VIDEO_QUEUE_GAP_MS));
         }
       }
     } finally {

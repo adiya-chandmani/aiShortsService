@@ -44,6 +44,9 @@ type Action =
   | { type: 'SET_RENDER'; projectId: string; render: FinalRender };
 
 const STORAGE_KEY = 'fancut_studio_v2';
+const VIDEO_POLL_INTERVAL_MS = 6_000;
+const VIDEO_RATE_LIMIT_BACKOFF_MS = 8_000;
+const VIDEO_TRANSIENT_RETRY_LIMIT = 6;
 
 const initialState: State = {
   projects: {},
@@ -468,6 +471,21 @@ function isRateLimitError(error: unknown) {
   return message.includes('429') || message.includes('too many attempts') || message.includes('too many requests');
 }
 
+function isTransientVideoError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    isRateLimitError(error)
+    || message.includes('502')
+    || message.includes('503')
+    || message.includes('504')
+    || message.includes('timeout')
+    || message.includes('timed out')
+    || message.includes('gateway')
+    || message.includes('temporarily unavailable')
+  );
+}
+
 function selectedImageForCut(state: State, cutId: string) {
   const imageState = state.imagesByCut[cutId];
   return imageState?.candidates.find((candidate) => candidate.imageId === imageState.selectedImageId);
@@ -831,19 +849,25 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
         downloadUri?: string;
         error?: { message?: string };
       }>(createResponse);
+      let transientPollFailures = 0;
 
       while (video.status === 'queued' || video.status === 'in_progress') {
-        await sleep(12_000);
+        await sleep(VIDEO_POLL_INTERVAL_MS);
         try {
           const pollResponse = await fetch(`/api/fancut/videos/${video.id}`, {
             cache: 'no-store',
           });
           video = await parseJsonOrThrow<typeof video>(pollResponse);
+          transientPollFailures = 0;
         } catch (error) {
-          if (!isRateLimitError(error)) {
+          if (!isTransientVideoError(error)) {
             throw error;
           }
-          await sleep(20_000);
+          transientPollFailures += 1;
+          if (transientPollFailures > VIDEO_TRANSIENT_RETRY_LIMIT) {
+            throw error;
+          }
+          await sleep(VIDEO_RATE_LIMIT_BACKOFF_MS);
         }
       }
 
@@ -851,11 +875,28 @@ export function FanCutStudioProvider({ children }: { children: React.ReactNode }
         throw new Error(video.error?.message ?? '영상 생성에 실패했습니다.');
       }
 
-      const downloadResponse = await fetch(
-        `/api/fancut/videos/${video.id}/content?durationSec=${durationSec}&size=${videoSizeForProject(project)}`,
-        { cache: 'no-store' }
-      );
-      const blob = await parseBlobOrThrow(downloadResponse);
+      let blob: Blob | null = null;
+      let transientDownloadFailures = 0;
+
+      while (!blob) {
+        try {
+          const downloadResponse = await fetch(
+            `/api/fancut/videos/${video.id}/content?durationSec=${durationSec}&size=${videoSizeForProject(project)}`,
+            { cache: 'no-store' }
+          );
+          blob = await parseBlobOrThrow(downloadResponse);
+        } catch (error) {
+          if (!isTransientVideoError(error)) {
+            throw error;
+          }
+          transientDownloadFailures += 1;
+          if (transientDownloadFailures > VIDEO_TRANSIENT_RETRY_LIMIT) {
+            throw error;
+          }
+          await sleep(VIDEO_RATE_LIMIT_BACKOFF_MS);
+        }
+      }
+
       const objectUrl = URL.createObjectURL(blob);
 
       const asset: VideoAsset = {
