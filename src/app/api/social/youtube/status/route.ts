@@ -49,14 +49,20 @@ export async function GET(request: Request) {
 
     return response;
   } catch (err) {
+    const status = err instanceof YouTubeApiError ? err.status : 500;
     const message = err instanceof YouTubeApiError || err instanceof Error ? err.message : 'YouTube 연결 상태를 확인하지 못했습니다.';
-    const response = NextResponse.json<PlatformConnectionStatus>({
-      platform: 'youtube',
-      configured: true,
-      connected: false,
-      message,
-    });
-    response.cookies.delete(YOUTUBE_SESSION_COOKIE);
+    const response = NextResponse.json<PlatformConnectionStatus>(
+      {
+        platform: 'youtube',
+        configured: true,
+        connected: false,
+        message,
+      },
+      { status }
+    );
+    if (status === 401 || status === 403) {
+      response.cookies.delete(YOUTUBE_SESSION_COOKIE);
+    }
     return response;
   }
 }
