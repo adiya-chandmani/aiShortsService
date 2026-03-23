@@ -120,7 +120,7 @@ export function deapiVideoDimensions(aspectRatio: AspectRatio) {
 }
 
 export function deapiVideoFps() {
-  return 30;
+  return 16;
 }
 
 export function deapiVideoFrames(durationSec: 3 | 5) {
