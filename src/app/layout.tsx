@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Noto_Sans_KR } from "next/font/google";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { ProviderSettingsProvider } from "../contexts/ProviderSettingsContext";
@@ -93,6 +94,7 @@ export default function RootLayout({
             </FanCutStudioProvider>
           </ProviderSettingsProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
